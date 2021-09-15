@@ -1,0 +1,21 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "asmr"
+authors = [{name = "coco", email = "0.0@asmr.software"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+dynamic = ["version", "description"]
+dependencies = [
+    "requests >= 2.26",
+    "click >= 8.0"
+]
+
+[project.urls]
+Home = "https://github.com/asmr-systems/toolkit"
+
+[project.scripts]
+asmr = "asmr.cli:main"
