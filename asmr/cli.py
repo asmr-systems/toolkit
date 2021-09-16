@@ -8,6 +8,7 @@ import click
 import asmr.mcu
 import asmr.http
 import asmr.logging
+import asmr.string
 from asmr.ansi import color, style
 
 

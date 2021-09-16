@@ -1,14 +1,18 @@
 """ Logging utilities. """
 
 import atexit
+import contextlib
 import datetime
 import enum
 import functools
 import io
 import pathlib
+import shutil
 import sys
 import typing as t
 
+import asmr.string
+from asmr.decorators import interval
 from asmr.ansi import color, escape_ansi
 
 
@@ -49,7 +53,7 @@ def _default_fmt_fn(name: str, level: Level, msg: str) -> str:
         Level.error:   color.red_light(msg),
     }
 
-    return f"{time_fmt} {level_fmt[level]} {name_fmt} {msg_fmt[level]}\n"
+    return f"{time_fmt} {level_fmt[level]} {name_fmt} {msg_fmt[level]}"
 
 
 class Formatter:
@@ -104,23 +108,64 @@ class Logger:
             return _wrapper
         return _decorator
 
-    # TODO progress context.
+    @contextlib.contextmanager
+    def progress(self, prefix: str):
+        """ Logs the progress of an incremental task.
+
+        Usage Example:
+            with my_log.progress("doing some task") as progress:
+                for x in range(100):
+                    progress(x/100, suffix="% complete")
+
+        Note: the yielded 'progress' function accepts a float between [0, 1]
+        as its first argument.
+        """
+        _current = 0
+        _total   = 0
+        _seq     = asmr.string.sequence("▶▷")
+        def updater_fn(current: float, total: float, suffix=""):
+            nonlocal _current, _total, _seq
+            columns, _ = shutil.get_terminal_size()
+            _current   = current
+            _total     = total
+            percent    = current / total
+            width      = columns / 2
+            complete   = int(percent * width)
+            remaining  = int(width - complete)
+            return f"[{_seq[:complete]}{' '*remaining}]{suffix}"
+
+        # @interval(100)
+        def wrapped_updater_fn(current: float, total: float, suffix=""):
+            sys.stdout.write("\r")
+            sys.stdout.write(self.fmt(self.name, Level.info, updater_fn(current, total, suffix)))
+            sys.stdout.flush()
+
+        try:
+            sys.stdout.write(self.fmt(self.name, Level.info, prefix) + "\n")
+            yield wrapped_updater_fn
+        finally:
+            sys.stdout.write("\r")
+            if _current <= _total:
+                self.stderr.write(self.fmt(self.name, Level.error, f"{prefix} " + updater_fn(_current, _total, " aborted.\n")))
+            else:
+                self.stdout.write(self.fmt(self.name, Level.info, f"{prefix} " + updater_fn(_total, _total, " ok.\n")))
+
 
     @filter(Level.debug)
     def debug(self, msg: str):
-        self.stdout.write(msg)
+        self.stdout.write(f"{msg}\n")
 
     @filter(Level.info)
     def info(self, msg: str):
-        self.stdout.write(msg)
+        self.stdout.write(f"{msg}\n")
 
     @filter(Level.warning)
     def warning(self, msg: str):
-        self.stdout.write(msg)
+        self.stdout.write(f"{msg}\n")
 
     @filter(Level.error)
     def error(self, msg: str):
-        self.stderr.write(msg)
+        self.stderr.write(f"{msg}\n")
 
     def close(self):
         if self.log:
