@@ -2,6 +2,7 @@
 
 import typing as t
 from enum import Enum
+import re
 
 
 class _ansi_color(Enum):
@@ -71,3 +72,10 @@ class color(Enum):
     magenta_light_bg = lambda t : _background(_ansi_color.magenta, t, light=True)
     cyan_light_bg    = lambda t : _background(_ansi_color.cyan, t, light=True)
     white_light_bg   = lambda t : _background(_ansi_color.white, t, light=True)
+
+
+# thanks @Manogna!
+# https://www.tutorialspoint.com/How-can-I-remove-the-ANSI-escape-sequences-from-a-string-in-python
+_ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+def escape_ansi(line: str) -> str:
+    return _ansi_escape.sub('', line)

@@ -7,6 +7,7 @@ import click
 
 import asmr.mcu
 import asmr.http
+import asmr.logging
 from asmr.ansi import color, style
 
 
@@ -79,7 +80,9 @@ def mcu_fetch(mcu_family, material, force):
     url = mcu.datasheet_url if material == "datasheet" else mcu.software_url
     asmr.http.download_file(url, pathlib.Path("."))
 
-
+@main.command('test')
+def general_testing():
+    pass
 
 if __name__ == '__main__':
     main()

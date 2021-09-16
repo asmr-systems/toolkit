@@ -3,6 +3,7 @@
 import os
 import logging
 import pathlib
+import sys
 
 import requests
 
@@ -11,7 +12,7 @@ import asmr.logging
 log = asmr.logging.get_logger('http')
 
 
-def download_file(url: str, dst_dir: pathlib.Path) -> pathlib.Path:
+def download_file(url: str, dst_dir: pathlib.Path, show_progress=True) -> pathlib.Path:
     filepath = dst_dir / url.split('/')[-1]
 
     os.makedirs(dst_dir, exist_ok=True)
