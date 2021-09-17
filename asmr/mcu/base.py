@@ -45,7 +45,11 @@ class Mcu(abc.ABC):
             # download
             asmr.http.download_file(self.datasheet_url, cache)
 
-        shutil.copy(cache/filename, pathlib.Path.cwd())
+        # make datasheets dir
+        datasheets_dir = pathlib.Path("datasheets")
+        datasheets_dir.mkdir(exist_ok=True)
+
+        shutil.copy(cache/filename, datasheets_dir)
         log.info(f"success fetching {filename}")
 
     def normalize_name(self):
