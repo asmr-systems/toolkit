@@ -6,14 +6,19 @@ import datetime
 import enum
 import functools
 import io
+import os
 import pathlib
 import shutil
 import sys
 import typing as t
 
+import asmr.env
 import asmr.string
 from asmr.decorators import interval
 from asmr.ansi import color, style, escape_ansi
+
+
+_default_logs_dir = os.getenv(asmr.env.logs) or '.logs'
 
 
 class Level(enum.Enum):
@@ -116,7 +121,7 @@ class Logger:
         return _decorator
 
     @contextlib.contextmanager
-    def progress(self, prefix: str, update_ms=100):
+    def progress(self, prefix: str, end_suffix=None, update_ms=100):
         """ Logs the progress of an incremental task.
 
         Usage Example:
@@ -164,7 +169,8 @@ class Logger:
             self.warning(f"stopped (ctrl-c)! {prefix} [aborted {_percent:1.1f}%]")
             sys.exit()
 
-        clear_line()
+        # Thanks Alex Volkov! see https://stackoverflow.com/a/33024739
+        updater_fn.__wrapped__(1, end_suffix or "")
         self.info(f"{prefix} [done]")
 
 
@@ -224,7 +230,7 @@ class LogCtl:
             logger.close()
 
 
-_logctl = LogCtl(pathlib.Path("logs"))
+_logctl = LogCtl(pathlib.Path(_default_logs_dir))
 
 
 def get_logger(name="asmr", to_file=True) -> Logger:

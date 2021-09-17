@@ -24,12 +24,12 @@ def main():
 def _mcu_ls():
     title = "MCU Inventory"
     print(style.bold(color.white_light(title)))
-    fmt_name = lambda s : color.green_light(s.lower().replace(' ',''))
+    fmt_name = lambda s : color.green_light(s)
     fmt_manufacturer = lambda s : color.cyan_light(f"[{s}]")
     fmt_plain = lambda s : color.white_light(f"{s}")
     for idx, mcu in enumerate(asmr.mcu.inventory):
         sys.stdout.write(f"{idx})  ")
-        sys.stdout.write(f"{fmt_name(mcu.name)} ")
+        sys.stdout.write(f"{fmt_name(mcu.normalize_name())} ")
         sys.stdout.write(f"{fmt_manufacturer(mcu.manufacturer)} ")
         sys.stdout.write(fmt_plain("("))
         sys.stdout.write(fmt_plain(mcu.cpu.arch) + " ")
@@ -51,21 +51,14 @@ def mcu(ctx):
 def mcu_ls():
     _mcu_ls()
 
-# @click.argument('mcu',
-#               required=True,
-#               type=click.Choice([m.name.lower().replace(' ','') for m in asmr.mcu.inventory]),
-#               help="the microcontroller family name.")
-# @click.argument('material',
-#               required=True,
-#               type=click.Choice(['datasheet', 'software']),
-#               help="material to fetch.")
+
 @mcu.command('fetch')
 @click.argument('mcu_family',
                 required=True,
-                type=click.Choice([m.name.lower().replace(' ','') for m in asmr.mcu.inventory]))
+                type=click.Choice([m.normalize_name() for m in asmr.mcu.inventory]))
 @click.argument('material',
-                required=True,
-                type=click.Choice(['datasheet', 'software']))
+                default='all',
+                type=click.Choice(['all', 'datasheet', 'software']))
 @click.option('--force',
               is_flag=True,
               default=False,
@@ -77,20 +70,16 @@ def mcu_fetch(mcu_family, material, force):
 
     MATERIAL is the material to fetch.
     """
-    mcu = list(filter(lambda m : m.name.lower().replace(' ', '') == mcu_family, asmr.mcu.inventory))[0]
-    url = mcu.datasheet_url if material == "datasheet" else mcu.software_url
-    asmr.http.download_file(url, pathlib.Path("."))
+    mcu = list(filter(lambda m : m.normalize_name() == mcu_family, asmr.mcu.inventory))[0]
+    if material == 'all':
+        mcu.fetch()
+    elif material == 'datasheet':
+        mcu.fetch_datasheet()
+    elif material == 'software':
+        mcu.fetch_software()
 
 @main.command('test')
 def general_testing():
-    import time
-    l = asmr.logging.get_logger()
-    with l.progress("downloaind npthing") as progress:
-        N = 10000
-        for i in range(N):
-            progress(i/N, suffix=f"{((i/N)*100):.2f}%")
-            time.sleep(0.001)
-
     pass
 
 if __name__ == '__main__':

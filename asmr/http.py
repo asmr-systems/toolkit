@@ -7,6 +7,7 @@ import sys
 
 import requests
 
+import asmr.fs
 import asmr.logging
 
 log = asmr.logging.get_logger()
@@ -21,13 +22,17 @@ def download_file(url: str, dst_dir: pathlib.Path, show_progress=True) -> pathli
         rsp.raise_for_status()
         with filepath.open(mode='wb') as f:
             total_bytes      = int(rsp.headers["Content-length"])
+            total            = f"% {asmr.fs.sizeof_fmt(total_bytes)}"
             downloaded_bytes = 0
             chunk_size_bytes = 8192
-            with log.progress(f"downloading {filepath.name}") as progress:
+            with log.progress(f"downloading {filepath.name}", end_suffix=total) as progress:
                 for chunk in rsp.iter_content(chunk_size=chunk_size_bytes):
                     f.write(chunk)
 
                     downloaded_bytes+=chunk_size_bytes
-                    progress(downloaded_bytes/total_bytes, suffix="%")
+                    percent  = downloaded_bytes/total_bytes
+                    readable = asmr.fs.sizeof_fmt(downloaded_bytes)
+                    suffix   = f"{(percent*100):.2f}% ({readable})"
+                    progress(percent, suffix=suffix)
 
     return filepath

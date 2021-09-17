@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# logging
-logs/
+# ASMR logging
+.logs/
+
+# ASMR caching
+.cache/
