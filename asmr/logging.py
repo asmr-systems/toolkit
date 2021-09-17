@@ -13,7 +13,7 @@ import typing as t
 
 import asmr.string
 from asmr.decorators import interval
-from asmr.ansi import color, escape_ansi
+from asmr.ansi import color, style, escape_ansi
 
 
 class Level(enum.Enum):
@@ -56,6 +56,12 @@ def _default_fmt_fn(name: str, level: Level, msg: str) -> str:
     return f"{time_fmt} {level_fmt[level]} {name_fmt} {msg_fmt[level]}"
 
 
+def clear_line():
+    sys.stdout.write("\r")
+    sys.stdout.write(' ' * shutil.get_terminal_size().columns)
+    sys.stdout.write("\r")
+
+
 class Formatter:
     def __init__(self, fmt_fn=_default_fmt_fn):
         self.fmt_fn = fmt_fn
@@ -95,7 +101,8 @@ class Logger:
     def set_format(self, fmt: Formatter):
         self.fmt = fmt
 
-    def filter(level):
+    def filter_and_format(level):
+        """ Decorator to filter and format log messages of various levels."""
         def _decorator(fn):
             @functools.wraps(fn)
             def _wrapper(*args):
@@ -109,7 +116,7 @@ class Logger:
         return _decorator
 
     @contextlib.contextmanager
-    def progress(self, prefix: str):
+    def progress(self, prefix: str, update_ms=100):
         """ Logs the progress of an incremental task.
 
         Usage Example:
@@ -120,50 +127,60 @@ class Logger:
         Note: the yielded 'progress' function accepts a float between [0, 1]
         as its first argument.
         """
-        _current = 0
-        _total   = 0
-        _seq     = asmr.string.sequence("▶▷")
-        def updater_fn(current: float, total: float, suffix=""):
-            nonlocal _current, _total, _seq
-            columns, _ = shutil.get_terminal_size()
-            _current   = current
-            _total     = total
-            percent    = current / total
-            width      = columns / 2
-            complete   = int(percent * width)
-            remaining  = int(width - complete)
-            return f"[{_seq[:complete]}{' '*remaining}]{suffix}"
 
-        # @interval(100)
-        def wrapped_updater_fn(current: float, total: float, suffix=""):
+        _percent = 0
+        _seq     = asmr.string.sequence("◯", "◴◷◶◵")
+        @interval(update_ms)
+        def updater_fn(percent: float, suffix=""):
+            nonlocal _seq, _percent
+            columns    = shutil.get_terminal_size().columns
+            _percent   = percent * 100
+            width      = columns - (len(suffix) + 2)
+
+            bar_seq         = _seq[:(int(percent * width))]
+            bar_done        = f"{style.bold(color.green_light(bar_seq[:-1]))}"
+            bar_in_progress = f"{style.bold(color.cyan_light(bar_seq[-1]))}"
+            bar_remaining   = ' '*(width - len(bar_seq))
+
+            delim_l_fmt  = f"{color.white('[')}"
+            delim_r_fmt  = f"{color.white(']')}"
+            bar_fmt    = f"{bar_done}{bar_in_progress}{bar_remaining}"
+            suffix_fmt = f"{color.green_light(suffix)}"
+
+            clear_line()
             sys.stdout.write("\r")
-            sys.stdout.write(self.fmt(self.name, Level.info, updater_fn(current, total, suffix)))
+            sys.stdout.write(f"{delim_l_fmt}{bar_fmt}{delim_r_fmt}{suffix_fmt}")
             sys.stdout.flush()
 
         try:
-            sys.stdout.write(self.fmt(self.name, Level.info, prefix) + "\n")
-            yield wrapped_updater_fn
-        finally:
-            sys.stdout.write("\r")
-            if _current <= _total:
-                self.stderr.write(self.fmt(self.name, Level.error, f"{prefix} " + updater_fn(_current, _total, " aborted.\n")))
-            else:
-                self.stdout.write(self.fmt(self.name, Level.info, f"{prefix} " + updater_fn(_total, _total, " ok.\n")))
+            self.info(f"{prefix} [in progress]")
+            yield updater_fn
+        except Exception as e:
+            clear_line()
+            self.error(f"{e} -- {prefix} [aborted {_percent:1.1f}%]")
+            raise e
+        except KeyboardInterrupt:
+            clear_line()
+            self.warning(f"stopped (ctrl-c)! {prefix} [aborted {_percent:1.1f}%]")
+            sys.exit()
+
+        clear_line()
+        self.info(f"{prefix} [done]")
 
 
-    @filter(Level.debug)
+    @filter_and_format(Level.debug)
     def debug(self, msg: str):
         self.stdout.write(f"{msg}\n")
 
-    @filter(Level.info)
+    @filter_and_format(Level.info)
     def info(self, msg: str):
         self.stdout.write(f"{msg}\n")
 
-    @filter(Level.warning)
+    @filter_and_format(Level.warning)
     def warning(self, msg: str):
         self.stdout.write(f"{msg}\n")
 
-    @filter(Level.error)
+    @filter_and_format(Level.error)
     def error(self, msg: str):
         self.stderr.write(f"{msg}\n")
 

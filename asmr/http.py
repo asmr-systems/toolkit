@@ -28,6 +28,6 @@ def download_file(url: str, dst_dir: pathlib.Path, show_progress=True) -> pathli
                     f.write(chunk)
 
                     downloaded_bytes+=chunk_size_bytes
-                    progress(downloaded_bytes, total_bytes, suffix="%")
+                    progress(downloaded_bytes/total_bytes, suffix="%")
 
     return filepath

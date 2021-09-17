@@ -83,6 +83,14 @@ def mcu_fetch(mcu_family, material, force):
 
 @main.command('test')
 def general_testing():
+    import time
+    l = asmr.logging.get_logger()
+    with l.progress("downloaind npthing") as progress:
+        N = 10000
+        for i in range(N):
+            progress(i/N, suffix=f"{((i/N)*100):.2f}%")
+            time.sleep(0.001)
+
     pass
 
 if __name__ == '__main__':
