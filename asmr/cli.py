@@ -78,6 +78,23 @@ def mcu_fetch(mcu_family, material, force):
     elif material == 'software':
         mcu.fetch_software()
 
+
+@main.command('init')
+def project_init():
+    # git clone template into cache or pull from main
+    # ask for new project name
+    # create directory here
+    # copy all files from git template
+    # remove .git
+    # init .git
+    # switch to main branch
+    # select mcu
+    # pull git sub-modules
+
+    # there should be an `asmr dev` command which logs you into the vagrant box
+    # if you are in a project directory the right directory.
+    pass
+
 @main.command('test')
 def general_testing():
     pass
