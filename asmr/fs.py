@@ -30,6 +30,21 @@ def cache(path=pathlib.Path(_default_cache_dir)) -> pathlib.Path:
     return path
 
 
+def get_project_root(cwd: pathlib.Path=None) -> pathlib.Path:
+    """ searches for project root. """
+    if cwd == None:
+        cwd = pathlib.Path.cwd()
+
+    if (cwd/'.asmr').exists():
+        return cwd
+
+    if cwd.parent == cwd:
+        # no project root.
+        return None
+
+    return get_project_root(cwd.parent)
+
+
 def unzip(src: pathlib.Path, dst: pathlib.Path) -> t.List[pathlib.Path]:
     """ extracts zip and returns unzipped dir. """
     unzipped_dirs = set()
