@@ -6,14 +6,27 @@ import subprocess
 
 import asmr.process
 import asmr.logging
+import asmr.decorators
 
+
+## Logging
+#
 log = asmr.logging.get_logger('asmr::vagrant')
 
 
+## Constants
+#
+DEFAULT_VM_NAME = "asmr.dev"
+
+
+## Types
+#
 Status = collections.namedtuple('Status', ['id', 'state'])
 
 
-def status(machine_name: str = "asmr.dev"):
+## Vagrant Functions
+#
+def status(machine_name: str = DEFAULT_VM_NAME) -> Status:
     proc = asmr.process.Pipeline("vagrant global-status --prune", logger=None)
     proc|= f"grep {machine_name}"
     proc|= "awk '{printf \"%s\t%s\",$1,$4}'"
@@ -30,21 +43,51 @@ def status(machine_name: str = "asmr.dev"):
     return Status(results[0], results[1])
 
 
+def is_running(machine_name: str = DEFAULT_VM_NAME) -> bool:
+    """ check whether a machine is running. """
+    machine_id, state = status(machine_name)
+    if machine_id == None or state != "running":
+        return False
+    return True
+
+
+def exists(machine_name: str = DEFAULT_VM_NAME) -> bool:
+    """ check whether a machine exists. """
+    machine_id, _ = status(machine_name)
+    return True if machine_id else False
+
+
+@asmr.decorators.static_variables(name_to_id={})
+def get_id(machine_name: str = DEFAULT_VM_NAME) -> str:
+    """ get the machine id for the given machine name. """
+    M = get_id.name_to_id
+    if machine_name not in M or M[machine_name] == None:
+        machine_id, _ = status(machine_name)
+        M[machine_name] = machine_id
+    return M[machine_name]
+
+
+# TODO *update all these functions to take an optional machine_name
+# as a paramter and then lookup the machine_id with the above
+# memoized function.
 def suspend(machine_id: str):
     log.info(f"suspending {machine_id}...")
     asmr.process.run(f"vagrant suspend {machine_id}")
 
 
+# TODO *update
 def halt(machine_id: str):
     log.info(f"halting {machine_id}...")
     asmr.process.run(f"vagrant halt {machine_id}")
 
 
+# TODO *update
 def destroy(machine_id: str):
     log.info(f"destroying {machine_id}...")
     asmr.process.run(f"vagrant destroy --force {machine_id}")
 
 
+# TODO *update
 def up(machine_id: str=None):
     if machine_id:
         log.info(f"starting up {machine_id}...")
@@ -57,20 +100,33 @@ def up(machine_id: str=None):
         asmr.process.run(f"vagrant up", capture=False)
 
 
+# TODO *update
 def resume(machine_id: str):
     log.info(f"resuming {machine_id}...")
     asmr.process.run(f"vagrant resume {machine_id}")
 
 
+# TODO *update
+def remote_exec(cmd: str, machine_id: str):
+    """execute a command remotely on the virtual machine. """
+    asmr.process.run(f"vagrant ssh -c \"{cmd}\" {machine_id}",
+                     logger=None)
+
+
+# TODO *update
 def ssh(machine_id: str, dest: pathlib.Path = "/asmr/projects"):
     # Thanks sholsapp! see https://www.py4u.net/discuss/224642
-    subprocess.call(f"vagrant ssh -c \"cd {dest}; bash --login\" {machine_id}", shell=True)
+    subprocess.call(f"vagrant ssh -c \"cd {dest}; bash --login\" {machine_id}",
+                    shell=True)
 
 
-def mount(machine_id: str,
-          host_src:pathlib.Path,
-          share_name: str,
+def mount(host_src: pathlib.Path,
+          guest_dst: pathlib.Path,
           machine_name="asmr.dev"):
+
+    machine_id = get_id(machine_name)
+    share_name = guest_dst.name
+
     # does the share exist?
     _, stdout, _  = asmr.process.pipeline([
         f"VBoxManage showvminfo {machine_name}",
@@ -96,11 +152,9 @@ def mount(machine_id: str,
 
     if len(stdout) == 1 and stdout[0] == "No value set!":
         # now mount within the guest.
-        share_dir = f"/asmr/projects/{share_name}"
-        cmd = f"sudo mkdir -p {share_dir} & sudo chown vagrant {share_dir}"
-        cmd = f"{cmd} & sudo mount -t vboxsf -o uid=1000,gid=1000 {share_name} {share_dir}"
-        cmd = f"vagrant ssh -c \"{cmd}\" {machine_id}"
-        asmr.process.run(cmd, logger=None)
+        cmd = f"sudo mkdir -p {guest_dst} & sudo chown vagrant {guest_dst}"
+        cmd = f"{cmd} & sudo mount -t vboxsf -o uid=1000,gid=1000 {share_name} {guest_dst}"
+        remote_exec(cmd, machine_id)
 
 
 def reload():

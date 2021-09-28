@@ -17,3 +17,14 @@ def interval(ms: int):
                 fn(*args, **kwargs)
         return _wrapper
     return _decorator
+
+
+# Thanks Claudiu, John Kugelman
+# see https://stackoverflow.com/a/279586
+def static_variables(**kwargs):
+    """ add static variables to functions. """
+    def _decorator(fn):
+        for k in kwargs:
+            setattr(fn, k, kwargs[k])
+        return fn
+    return _decorator

@@ -11,7 +11,8 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
 dependencies = [
     "requests >= 2.26",
-    "click >= 8.0"
+    "click >= 8.0",
+    "pyserial >=3.0"
 ]
 
 [project.urls]

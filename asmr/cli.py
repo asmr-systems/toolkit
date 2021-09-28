@@ -85,6 +85,28 @@ def mcu_fetch(mcu_family, material, force):
         mcu.fetch_software()
 
 
+@main.command("update")
+def update_software():
+    # TODO change to $HOME/.asmr
+    # git clone template into cache or pull from main
+    template_path = asmr.fs.cache()/"module-template"
+    if (template_path).exists():
+        with asmr.fs.pushd(template_path):
+            asmr.git.pull("main")
+    else:
+        url = "https://github.com/asmr-systems/module-template.git"
+        asmr.git.clone(url, template_path)
+
+    # git clone dev environment into cache or pull from main
+    dev_env_path = asmr.fs.cache()/"dev-environment"
+    if (dev_env_path).exists():
+        with asmr.fs.pushd(dev_env_path):
+            asmr.git.pull("main")
+    else:
+        url = "https://github.com/asmr-systems/dev-environment.git"
+        asmr.git.clone(url, dev_env_path)
+
+
 @main.command('init')
 def project_init():
     # ask for new project name
@@ -107,14 +129,9 @@ def project_init():
 
     log.info(f"==== Initializing '{project_name}' ====")
 
-    # git clone template into cache or pull from main
+    update_software()
+
     template_path = asmr.fs.cache()/"module-template"
-    if (template_path).exists():
-        with asmr.fs.pushd(template_path):
-            asmr.git.pull("main")
-    else:
-        url = "https://github.com/asmr-systems/module-template.git"
-        asmr.git.clone(url, template_path)
 
     # create directory here
     repo_path = pathlib.Path('.')/project_name
@@ -130,10 +147,6 @@ def project_init():
         # switch to main branch
         asmr.git.branch.rename('main')
 
-        # add dev-env submodule
-        url = "https://github.com/asmr-systems/dev-environment.git"
-        asmr.git.add_submodule(url, pathlib.Path('.dev-environ'))
-
         # add mcu library submodule
         url = "https://github.com/asmr-systems/mcu-library.git"
         asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/libmcu'))
@@ -145,27 +158,45 @@ def project_init():
     log.info(f"   asmr develop")
 
 
+@main.command("mount")
+@click.argument("dst")
+@click.argument("src", required=False)
+def mount(dst: str, src: str):
+    """ mounts a directory into the running development environment.
+    """
+    src = pathlib.Path(src) if src != None else pathlib.Path.cwd()
+    dst = pathlib.Path(dst)
+
+    if not asmr.vagrant.is_running():
+        log.error(f"Development environment not running!")
+        return
+
+    asmr.vagrant.mount(src.resolve(), dst)
+
+
 def dev_env_create(project_root: pathlib.Path):
     """ create a dev environment virtual machine. """
-    with asmr.fs.pushd(project_root/'.dev-environ'):
+    with asmr.fs.pushd(asmr.fs.cache()/'dev-environment'):
         # build and provision vm. this could take a few minutes.
         asmr.vagrant.up()
 
 
 def dev_env_start_and_login():
     """ start, if necessary, and login. """
-    root = asmr.fs.get_project_root()
-    if root == None:
+    host_root = asmr.fs.get_project_root()
+    if host_root == None:
         log.error(f"Not within a project! You must be in an ASMR Project!")
         return
 
-    log.info(f"starting up dev environment ({root.name})...")
+    guest_root = pathlib.Path("/asmr/projects")/host_root.name
+
+    log.info(f"starting up dev environment ({host_root.name})...")
 
     machine_id, state = asmr.vagrant.status()
 
-    if machine_id == None:
+    if not asmr.vagrant.exists():
         # create it
-        dev_env_create(root)
+        dev_env_create(host_root)
 
         # re-read state
         machine_id, state = asmr.vagrant.status()
@@ -174,10 +205,10 @@ def dev_env_start_and_login():
         asmr.vagrant.resume(machine_id)
     elif state == 'poweroff':
         asmr.vagrant.up(machine_id)
-        asmr.vagrant.mount(machine_id, root, root.name)
+        asmr.vagrant.mount(host_root, guest_root)
 
-    asmr.vagrant.mount(machine_id, root, root.name)
-    asmr.vagrant.ssh(machine_id, dest=pathlib.Path("/asmr/projects")/root.name)
+    asmr.vagrant.mount(host_root, guest_root)
+    asmr.vagrant.ssh(machine_id, dest=guest_root)
 
 
 @main.group(help="dev environ tools", invoke_without_command=True)
@@ -231,12 +262,7 @@ def dev_destroy():
 
 @develop.command("provision", help="run provisioning for development environment.")
 def dev_provision():
-    project_root = asmr.fs.get_project_root()
-    if project_root == None:
-        log.error(f"Not within a project! You must be in an ASMR Project!")
-        return
-
-    with asmr.fs.pushd(project_root/'.dev-environ'):
+    with asmr.fs.pushd(asmr.fs.cache()/'dev-environment'):
         # provision vm. this could take a few minutes.
         asmr.vagrant.provision()
 
