@@ -144,6 +144,14 @@ def mount(host_src: pathlib.Path,
 
         asmr.process.run(cmd)
 
+    # enable symlinking within sharedfolder
+    # Thanks Dominik! (https://stackoverflow.com/a/24353494)
+    cmd = "VBoxManage setextradata"
+    cmd+=f" {machine_name}"
+    cmd+=f" \"VBoxInternal2/SharedFoldersEnableSymlinksCreate/"+f"{share_name}\""
+    cmd+=f" 1"
+    asmr.process.run(cmd)
+
     # is the share already mounted?
     _, stdout, _ = asmr.process.run(
         f"VBoxManage guestproperty get {machine_name} /VirtualBox/GuestAdd/SharedFolders/MountDir",

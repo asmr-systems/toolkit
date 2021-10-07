@@ -12,7 +12,8 @@ dynamic = ["version", "description"]
 dependencies = [
     "requests >= 2.26",
     "click >= 8.0",
-    "pyserial >=3.0"
+    "pyserial >=3.0",
+    "watchdog >=2.1.6"
 ]
 
 [project.urls]

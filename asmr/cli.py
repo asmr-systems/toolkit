@@ -11,6 +11,8 @@ import asmr.git
 import asmr.http
 import asmr.logging
 import asmr.string
+import asmr.mcli.test # TODO CHANGE THIS
+import asmr.mcli.build # TODO CHANGE THIS
 import asmr.vagrant
 from asmr.ansi import color, style
 
@@ -23,6 +25,10 @@ log = asmr.logging.get_logger()
 def main():
     """ cli entrypoint """
     pass
+
+
+main.add_command(asmr.mcli.test.main)
+main.add_command(asmr.mcli.build.main)
 
 
 # mcu tools
@@ -267,7 +273,7 @@ def dev_provision():
         asmr.vagrant.provision()
 
 
-@main.command('test')
+@main.command('testing')
 def general_testing():
     pass
 

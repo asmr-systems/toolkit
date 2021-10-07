@@ -1,0 +1,20 @@
+#+title:  ASMR SYSTEMS 'Toolkit' Todo List
+#+author: c
+#+date:   2021-09-30
+
+file:https://github.com/novoid/github-orgmode-tests/blob/master/README.org
+
+#+BEGIN_SRC python
+  def my_test(myvar: str = 'foo bar'):
+      """
+      This is an example function.
+
+      @type  myvar: str = 'foo bar': number
+      @param myvar: str = 'foo bar': FIXXME
+      """
+
+      mynewvar: str = myvar + ' additional content'
+      return mynewvar
+
+  print("Hello " + my_text('Europe!'))
+#+END_SRC

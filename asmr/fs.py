@@ -3,8 +3,12 @@
 import contextlib
 import os
 import pathlib
+import time
 import typing as t
 import zipfile
+
+from watchdog.observers.polling import PollingObserver
+from watchdog.events import FileSystemEventHandler
 
 import asmr.env
 import asmr.logging
@@ -12,6 +16,7 @@ import asmr.logging
 _default_cache_dir = os.getenv(asmr.env.cache) or '.cache'
 
 log = asmr.logging.get_logger()
+log.set_level(asmr.logging.Level.debug)
 
 
 @contextlib.contextmanager
@@ -73,3 +78,63 @@ def sizeof_fmt(bs: int, suffix='B') -> str:
             return f"{bs:3.1f}{unit}{suffix}"
         bs /= 1024.0
     return f"{bs:.1f}Yi{suffix}"
+
+
+class FileSystemWatcher(FileSystemEventHandler):
+    """ FileSystem Handler for monitoring changes.
+
+    Since we need to be able to reliably watch the filesystem
+    on the host and also within a virtual machine, we don't use
+    the Linux inotify system, but polling via the watchdog lib.
+
+    Thanks Michael Cho!
+    (https://michaelcho.me/article/using-pythons-watchdog-to-monitor-changes-to-a-directory)
+    """
+
+    def __init__(self, ignore: t.List[pathlib.Path]=[]):
+        super()
+        self.ignore = ignore
+        self.events = []
+
+
+    def __call__(self):
+        """ event generator. """
+        while True:
+            while len(self.events) == 0:
+                time.sleep(0.3)
+
+            while len(self.events) != 0:
+                event = self.events.pop()
+                yield event
+
+
+    def on_any_event(self, event):
+        if event.is_directory:
+            return None
+
+        valid_event_types = ['created', 'modified']
+
+        # TODO do some more filtering. IGNORE DIRECTORIES
+
+
+        if event.event_type in valid_event_types:
+            # Take any action here when a file is first created.
+            print(event)
+
+            # TODO mutex?
+            self.events.append(event.src_path)
+
+
+def watch(*paths: pathlib.Path,
+          ignore: t.List[pathlib.Path]=[]) -> t.Iterator[pathlib.Path]:
+    """ watch directories and file. """
+    event_handler = FileSystemWatcher(ignore)
+    observer = PollingObserver()
+    for path in paths:
+        observer.schedule(event_handler, str(path), recursive=True)
+    observer.start()
+    try:
+        yield from event_handler()
+    finally:
+        observer.stop()
+        observer.join()
