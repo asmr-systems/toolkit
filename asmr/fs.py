@@ -114,18 +114,16 @@ class FileSystemWatcher(FileSystemEventHandler):
 
         valid_event_types = ['created', 'modified']
 
-        # TODO do some more filtering. IGNORE DIRECTORIES
-
+        for ignore in self.ignore:
+            if str(ignore) in event.src_path:
+                return None
 
         if event.event_type in valid_event_types:
-            # Take any action here when a file is first created.
-            print(event)
-
             # TODO mutex?
             self.events.append(event.src_path)
 
 
-def watch(*paths: pathlib.Path,
+def watch(paths: pathlib.Path,
           ignore: t.List[pathlib.Path]=[]) -> t.Iterator[pathlib.Path]:
     """ watch directories and file. """
     event_handler = FileSystemWatcher(ignore)

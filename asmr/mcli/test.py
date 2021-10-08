@@ -45,9 +45,20 @@ def unit_test(watch):
         )
 
         if watch:
-            for fn in asmr.fs.watch(root/ProjectFirmwareUnitTestPath):
-                print(fn)
-                # asmr.process.run(
-                #     f"make",
-                #     capture=False
-                # )
+            # TODO parse watch paths from make file?
+            watch_paths = [
+                root/pathlib.Path("firmware/src"),
+                root/ProjectFirmwareUnitTestPath
+            ]
+            # TODO allow for regex?
+            ignore = [
+                root/pathlib.Path("firmware/build"),
+                root/ProjectFirmwareUnitTestPath/"build",
+            ]
+            for fn in asmr.fs.watch(watch_paths, ignore):
+                log.info(f"re-running GNU Make")
+                log.info(f"detected file change in '{fn}'")
+                asmr.process.run(
+                    f"make",
+                    capture=False
+                )
