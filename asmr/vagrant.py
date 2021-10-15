@@ -116,7 +116,7 @@ def remote_exec(cmd: str, machine_id: str):
 # TODO *update
 def ssh(machine_id: str, dest: pathlib.Path = "/asmr/projects"):
     # Thanks sholsapp! see https://www.py4u.net/discuss/224642
-    subprocess.call(f"vagrant ssh -c \"cd {dest}; bash --login\" {machine_id}",
+    subprocess.call(f"vagrant ssh -c \"cd {dest}; cat /.ASMR_DEV_ENV; bash --login\" {machine_id}",
                     shell=True)
 
 
