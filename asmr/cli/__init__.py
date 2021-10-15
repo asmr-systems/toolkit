@@ -6,6 +6,7 @@ import asmr.cli.build
 import asmr.cli.dev
 import asmr.cli.mcu
 import asmr.cli.project
+import asmr.cli.software
 import asmr.cli.test
 
 

@@ -13,10 +13,17 @@ from watchdog.events import FileSystemEventHandler
 import asmr.env
 import asmr.logging
 
-_default_cache_dir = os.getenv(asmr.env.cache) or '.cache'
 
+#:::: Logging
+#::::::::::::
 log = asmr.logging.get_logger()
 log.set_level(asmr.logging.Level.debug)
+
+
+#:::: Constants
+#::::::::::::::
+_default_cache_dir = '.cache'
+_home_dir = os.getenv(asmr.env.home) or pathlib.Path.home()/'.asmr.d/'
 
 
 @contextlib.contextmanager
@@ -27,6 +34,14 @@ def pushd(nwd: pathlib.Path) -> t.Iterator[pathlib.Path]:
         yield os.chdir(nwd)
     finally:
         os.chdir(cwd)
+
+
+# TODO rename this to 'path'?
+def home() -> pathlib.Path:
+    """ creates the asmr home directory if it doesn't exist. """
+    path=pathlib.Path(_home_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def cache(path=pathlib.Path(_default_cache_dir)) -> pathlib.Path:

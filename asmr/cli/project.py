@@ -9,8 +9,7 @@ import asmr.fs
 import asmr.git
 import asmr.logging
 import asmr.mcu
-
-import asmr.cli.software
+import asmr.software
 
 
 #:::: initialize logger.
@@ -44,9 +43,9 @@ def project_init():
 
     log.info(f"==== Initializing '{project_name}' ====")
 
-    software.update()
+    asmr.software.update()
 
-    template_path = asmr.fs.cache()/"module-template"
+    template_path = asmr.fs.home()/"module-template"
 
     # create directory here
     repo_path = pathlib.Path('.')/project_name

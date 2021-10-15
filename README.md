@@ -33,3 +33,6 @@ flit install --symlink --env --python venv/bin/python3  # install a symlinked ve
 # develop it within the vm, you will need to create the venv in a separate
 # directory (not in the current repo directory.) then everything should work.
 ```
+
+## Configuration
+The configuration directory is, by default, located within `~/.asmr.d/`. This can be changed by setting the `ASMR_HOME` environment variable.

@@ -6,16 +6,21 @@ import click
 
 import asmr.fs
 import asmr.logging
+import asmr.software
 import asmr.vagrant
 
 
-#:::: initialize logger.
+#:::: Logging
+#::::::::::::
 log = asmr.logging.get_logger()
 
 
 def dev_env_create(project_root: pathlib.Path):
     """ create a dev environment virtual machine. """
-    with asmr.fs.pushd(asmr.fs.cache()/'dev-environment'):
+    # update asmr systems software.
+    asmr.software.update()
+
+    with asmr.fs.pushd(asmr.fs.home()/'dev-environment'):
         # build and provision vm. this could take a few minutes.
         asmr.vagrant.up()
 
@@ -97,7 +102,7 @@ def rm():
 
 @main.command("provision", help="run provisioning for development environment.")
 def provision():
-    with asmr.fs.pushd(asmr.fs.cache()/'dev-environment'):
+    with asmr.fs.pushd(asmr.fs.home()/'dev-environment'):
         # provision vm. this could take a few minutes.
         asmr.vagrant.provision()
 
@@ -115,3 +120,7 @@ def mount(dst: str, src: str):
         return
 
     asmr.vagrant.mount(src.resolve(), dst)
+
+    # TODO add mount point to config stored in ASMR_HOME
+    # because if the VM is stopped or restarted, transient
+    # sharedfolders will not be remounted.
