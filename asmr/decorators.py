@@ -3,9 +3,11 @@
 import datetime
 import functools
 
+import asmr.fs
+
 
 def interval(ms: int):
-    """ Only execute the decorated function is 'ms' time has passed. """
+    """ Only execute the decorated function if 'ms' time has passed. """
     def _decorator(fn):
         start = datetime.datetime.now()
         @functools.wraps(fn)
@@ -27,4 +29,32 @@ def static_variables(**kwargs):
         for k in kwargs:
             setattr(fn, k, kwargs[k])
         return fn
+    return _decorator
+
+
+def exec_only_within_dev_env(log=None):
+    """ only allow function to be executed within the dev enviornment. """
+    def _decorator(fn):
+        @functools.wraps(fn)
+        def _wrapper(*args, **kwargs):
+            if asmr.fs.within_dev_env():
+                fn(*args, **kwargs)
+            else:
+                if log != None:
+                    log.error(f"Must execute {fn.__name__} within development environment.")
+        return _wrapper
+    return _decorator
+
+
+def exec_only_outside_dev_env(log=None):
+    """ only allow function to be executed outside the dev enviornment. """
+    def _decorator(fn):
+        @functools.wraps(fn)
+        def _wrapper(*args, **kwargs):
+            if not asmr.fs.within_dev_env():
+                fn(*args, **kwargs)
+            else:
+                if log != None:
+                    log.error(f"Must execute {fn.__name__} outside development environment.")
+        return _wrapper
     return _decorator

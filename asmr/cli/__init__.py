@@ -29,7 +29,8 @@ main.add_command(software.update)
 @main.command('testing')
 def general_testing():
     """ easy testing command. """
-    pass
+    import asmr.fs
+    print(f"WITHIN DEV ENV: {asmr.fs.within_dev_env()}")
 
 
 if __name__ == '__main__':

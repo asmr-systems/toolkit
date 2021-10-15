@@ -50,6 +50,11 @@ def cache(path=pathlib.Path(_default_cache_dir)) -> pathlib.Path:
     return path
 
 
+def within_dev_env():
+    """ detect whether we are within an ASMR dev environment. """
+    return pathlib.Path('/.ASMR_DEV_ENV').exists()
+
+
 def get_project_root(cwd: pathlib.Path=None) -> pathlib.Path:
     """ searches for project root. """
     if cwd == None:

@@ -4,6 +4,7 @@ import pathlib
 
 import click
 
+import asmr.decorators
 import asmr.fs
 import asmr.logging
 import asmr.software
@@ -25,6 +26,7 @@ def dev_env_create(project_root: pathlib.Path):
         asmr.vagrant.up()
 
 
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def dev_env_start_and_login():
     """ start, if necessary, and login. """
     host_root = asmr.fs.get_project_root()
@@ -63,6 +65,7 @@ def main(ctx):
 
 
 @main.command("status", help="show status of development environment.")
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def status():
     machine_id, state = asmr.vagrant.status()
     if machine_id == None:
@@ -72,6 +75,7 @@ def status():
 
 
 @main.command("pause", help="suspend the development environment.")
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def pause():
     machine_id, state = asmr.vagrant.status()
     if machine_id != None and state == 'running':
@@ -81,6 +85,7 @@ def pause():
 
 
 @main.command("stop", help="shutdown the development environment.")
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def stop():
     machine_id, state = asmr.vagrant.status()
     if machine_id != None:
@@ -90,6 +95,7 @@ def stop():
 
 
 @main.command("rm", help="shutdown and delete the development environment.")
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def rm():
     machine_id, state = asmr.vagrant.status()
 
@@ -101,6 +107,7 @@ def rm():
 
 
 @main.command("provision", help="run provisioning for development environment.")
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def provision():
     with asmr.fs.pushd(asmr.fs.home()/'dev-environment'):
         # provision vm. this could take a few minutes.
@@ -110,6 +117,7 @@ def provision():
 @main.command("mount")
 @click.argument("dst")
 @click.argument("src", required=False)
+@asmr.decorators.exec_only_outside_dev_env(log=log)
 def mount(dst: str, src: str):
     """ mounts a directory into the running development environment."""
     src = pathlib.Path(src) if src != None else pathlib.Path.cwd()
