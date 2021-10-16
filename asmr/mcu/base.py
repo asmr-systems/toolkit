@@ -7,6 +7,7 @@ import shutil
 import typing as t
 
 import asmr.fs
+import asmr.http
 import asmr.logging
 
 log = asmr.logging.get_logger()
@@ -19,6 +20,7 @@ class Core(abc.ABC):
     arch: str
     bits: int
     clock_mhz: float
+    fpu: bool
 
 @dataclasses.dataclass
 class Mcu(abc.ABC):
@@ -49,7 +51,7 @@ class Mcu(abc.ABC):
         datasheets_dir = pathlib.Path("datasheets")
         datasheets_dir.mkdir(exist_ok=True)
 
-        shutil.copy(cache/filename, datasheets_dir)
+        shutil.copy(cache/filename, datasheets_dir/f"{self.normalize_name()}.pdf")
         log.info(f"success fetching {filename}")
 
     def normalize_name(self):

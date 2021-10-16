@@ -9,7 +9,7 @@ import asmr.logging
 logger = asmr.logging.get_logger()
 
 
-# TODO refactor
+# TODO REMOVE....THIS IS DEPRECATED.
 def extract_mcu_from_asf(root_dir, mcu, force=True):
     core_cmsis = mcu.cpu.cmsis_name
     mcu = mcu.normalize_name()

@@ -29,8 +29,9 @@ main.add_command(software.update)
 @main.command('testing')
 def general_testing():
     """ easy testing command. """
-    import asmr.fs
-    print(f"WITHIN DEV ENV: {asmr.fs.within_dev_env()}")
+    import asmr.mcu.cmsis
+    asmr.mcu.cmsis.fetch_core_headers()
+    asmr.mcu.inventory[2].fetch_software()
 
 
 if __name__ == '__main__':

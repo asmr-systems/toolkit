@@ -3,7 +3,9 @@
 import contextlib
 import os
 import pathlib
+import shutil
 import time
+import tempfile
 import typing as t
 import zipfile
 
@@ -22,8 +24,8 @@ log.set_level(asmr.logging.Level.debug)
 
 #:::: Constants
 #::::::::::::::
-_default_cache_dir = '.cache'
-_home_dir = os.getenv(asmr.env.home) or pathlib.Path.home()/'.asmr.d/'
+_home_dir = pathlib.Path(os.getenv(asmr.env.home) or pathlib.Path.home()/'.asmr.d/')
+_default_cache_dir = _home_dir/'cache'
 
 
 @contextlib.contextmanager
@@ -68,6 +70,16 @@ def get_project_root(cwd: pathlib.Path=None) -> pathlib.Path:
         return None
 
     return get_project_root(cwd.parent)
+
+
+@contextlib.contextmanager
+def tmp_dir() -> t.Iterator[pathlib.Path]:
+    """ get a temporary directory and destroy it on scope exit. """
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    try:
+        yield tmp
+    finally:
+        shutil.rmtree(tmp)
 
 
 def unzip(src: pathlib.Path, dst: pathlib.Path) -> t.List[pathlib.Path]:
