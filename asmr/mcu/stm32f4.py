@@ -42,9 +42,12 @@ class STM32F405(Mcu):
 
             #:::: Fetch Linker Script(s)
             #:::::::::::::::::::::::::::
+            linker_url = 'https://raw.githubusercontent.com/micropython/micropython/master/ports/bare-arm/stm32f405.ld'
+
             linkers_root = cwd/'linkers/stm32f4'
             linkers_root.mkdir(parents=True, exist_ok=True)
-            # TODO download? or something?
+
+            asmr.http.download_file(linker_url, linkers_root)
 
             #:::: Fetch Bootloader
             #:::::::::::::::::::::
