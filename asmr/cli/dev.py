@@ -51,9 +51,10 @@ def dev_env_start_and_login():
         asmr.vagrant.resume(machine_id)
     elif state == 'poweroff':
         asmr.vagrant.up(machine_id)
-        asmr.vagrant.mount(host_root, guest_root)
+        asmr.vagrant.mount(host_root, guest_root) # DO WE STILL NEED THIS?
 
     asmr.vagrant.mount(host_root, guest_root)
+    asmr.vagrant.mount_all_recorded_mountpoints()
     asmr.vagrant.ssh(machine_id, dest=guest_root)
 
 

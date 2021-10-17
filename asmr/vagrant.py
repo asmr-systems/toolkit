@@ -4,28 +4,30 @@ import collections
 import pathlib
 import subprocess
 
+import asmr.fs
 import asmr.process
 import asmr.logging
 import asmr.decorators
 
 
-## Logging
-#
+#:::: Logging
+#::::::::::::
 log = asmr.logging.get_logger('asmr::vagrant')
 
 
-## Constants
-#
+#::::Constants
+#:::::::::::::
 DEFAULT_VM_NAME = "asmr.dev"
+mountpoint_file = asmr.fs.home()/'mountpoints.conf'
 
 
-## Types
-#
+#:::: Types
+#::::::::::
 Status = collections.namedtuple('Status', ['id', 'state'])
 
 
-## Vagrant Functions
-#
+#:::: Vagrant Functions
+#::::::::::::::::::::::
 def status(machine_name: str = DEFAULT_VM_NAME) -> Status:
     proc = asmr.process.Pipeline("vagrant global-status --prune", logger=None)
     proc|= f"grep {machine_name}"
@@ -65,6 +67,88 @@ def get_id(machine_name: str = DEFAULT_VM_NAME) -> str:
         machine_id, _ = status(machine_name)
         M[machine_name] = machine_id
     return M[machine_name]
+
+
+def record_mountpoint(host_src: pathlib.Path,
+                      guest_dst: pathlib.Path,
+                      machine_name="asmr.dev"):
+    """ records the mount point if not already recorded. """
+    # TODO use machine name for multiple vm support.
+    records = [f"{host_src}:{guest_dst}"]
+    if mountpoint_file.exists():
+        with open(mountpoint_file, 'r') as fd:
+            records += [l.strip() for l in fd.readlines()]
+
+    with open(mountpoint_file, 'w+') as fd:
+        for record in set(records):
+            if record != '':
+                fd.write(f"{record}\n")
+
+
+def mount(host_src: pathlib.Path,
+          guest_dst: pathlib.Path,
+          machine_name="asmr.dev"):
+    """ mount a host directory into the guest machine. """
+
+    machine_id = get_id(machine_name)
+    share_name = guest_dst.name
+
+    # does the share exist?
+    _, stdout, _  = asmr.process.pipeline([
+        f"VBoxManage showvminfo {machine_name}",
+        f"grep \"Name: '{share_name}'\""
+    ], logger=None)
+
+    # create transient folder share if it doesn't exist.
+    if len(stdout) == 0:
+        # first create a transient sharedfolder
+        cmd = "VBoxManage sharedfolder"
+        cmd+=f" add {machine_name}"
+        cmd+=f" --name {share_name}"
+        cmd+=f" --hostpath {host_src}"
+        cmd+=f" --transient"
+
+        asmr.process.run(cmd)
+
+    # enable symlinking within sharedfolder
+    # Thanks Dominik! (https://stackoverflow.com/a/24353494)
+    cmd = "VBoxManage setextradata"
+    cmd+=f" {machine_name}"
+    cmd+=f" \"VBoxInternal2/SharedFoldersEnableSymlinksCreate/"+f"{share_name}\""
+    cmd+=f" 1"
+    asmr.process.run(cmd)
+
+    # is the share already mounted?
+    _, stdout, _ = asmr.process.run(
+        f"VBoxManage guestproperty get {machine_name} /VirtualBox/GuestAdd/SharedFolders/MountDir",
+        logger=None
+    )
+
+    if len(stdout) == 1 and stdout[0] == "No value set!":
+        # now mount within the guest.
+        cmd = f"sudo mkdir -p {guest_dst} & sudo chown vagrant {guest_dst}"
+        cmd = f"{cmd} & sudo mount -t vboxsf -o uid=1000,gid=1000 {share_name} {guest_dst}"
+        remote_exec(cmd, machine_id)
+        log.info(f"Mountpoint {host_src} -> {guest_dst} created")
+    else:
+        log.info(f"Mountpoint {host_src} -> {guest_dst} already exists")
+
+    record_mountpoint(host_src, guest_dst, machine_name)
+
+
+def mount_all_recorded_mountpoints():
+    """ mounts all mountpoints recorded in mountpoint config. """
+    # TODO get machine name from mountpoint config to support multiple vms
+    machine_name = "asmr.dev"
+
+    if mountpoint_file.exists():
+        with open(mountpoint_file, 'r') as fd:
+            for mountpoint in [l.strip() for l in fd.readlines()]:
+                if mountpoint != '':
+                    host_src, guest_dst = mountpoint.split(':')
+                    mount(pathlib.Path(host_src),
+                          pathlib.Path(guest_dst),
+                          machine_name)
 
 
 # TODO *update all these functions to take an optional machine_name
@@ -118,51 +202,6 @@ def ssh(machine_id: str, dest: pathlib.Path = "/asmr/projects"):
     # Thanks sholsapp! see https://www.py4u.net/discuss/224642
     subprocess.call(f"vagrant ssh -c \"cd {dest}; cat /.ASMR_DEV_ENV; bash --login\" {machine_id}",
                     shell=True)
-
-
-def mount(host_src: pathlib.Path,
-          guest_dst: pathlib.Path,
-          machine_name="asmr.dev"):
-
-    machine_id = get_id(machine_name)
-    share_name = guest_dst.name
-
-    # does the share exist?
-    _, stdout, _  = asmr.process.pipeline([
-        f"VBoxManage showvminfo {machine_name}",
-        f"grep \"Name: '{share_name}'\""
-    ], logger=None)
-
-    # create transient folder share if it doesn't exist.
-    if len(stdout) == 0:
-        # first create a transient sharedfolder
-        cmd = "VBoxManage sharedfolder"
-        cmd+=f" add {machine_name}"
-        cmd+=f" --name {share_name}"
-        cmd+=f" --hostpath {host_src}"
-        cmd+=f" --transient"
-
-        asmr.process.run(cmd)
-
-    # enable symlinking within sharedfolder
-    # Thanks Dominik! (https://stackoverflow.com/a/24353494)
-    cmd = "VBoxManage setextradata"
-    cmd+=f" {machine_name}"
-    cmd+=f" \"VBoxInternal2/SharedFoldersEnableSymlinksCreate/"+f"{share_name}\""
-    cmd+=f" 1"
-    asmr.process.run(cmd)
-
-    # is the share already mounted?
-    _, stdout, _ = asmr.process.run(
-        f"VBoxManage guestproperty get {machine_name} /VirtualBox/GuestAdd/SharedFolders/MountDir",
-        logger=None
-    )
-
-    if len(stdout) == 1 and stdout[0] == "No value set!":
-        # now mount within the guest.
-        cmd = f"sudo mkdir -p {guest_dst} & sudo chown vagrant {guest_dst}"
-        cmd = f"{cmd} & sudo mount -t vboxsf -o uid=1000,gid=1000 {share_name} {guest_dst}"
-        remote_exec(cmd, machine_id)
 
 
 def reload():
