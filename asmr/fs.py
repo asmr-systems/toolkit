@@ -26,6 +26,7 @@ log.set_level(asmr.logging.Level.debug)
 #::::::::::::::
 _home_dir = pathlib.Path(os.getenv(asmr.env.home) or pathlib.Path.home()/'.asmr.d/')
 _default_cache_dir = _home_dir/'cache'
+project_config_filename = 'project.asmr.toml'
 
 
 @contextlib.contextmanager
@@ -62,7 +63,7 @@ def get_project_root(cwd: pathlib.Path=None) -> pathlib.Path:
     if cwd == None:
         cwd = pathlib.Path.cwd()
 
-    if (cwd/'.asmr').exists():
+    if (cwd/f"{project_config_filename}").exists():
         return cwd
 
     if cwd.parent == cwd:

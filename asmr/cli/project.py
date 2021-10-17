@@ -30,16 +30,14 @@ def project_init():
 
     # select mcu
     mcu_idx = [m.normalize_name() for m in asmr.mcu.inventory]
-    _mcu_ls()
+    asmr.mcu.ls()
     selected_idx = int(click.prompt(f"select microcontroller {list(range(len(mcu_idx)))}"))
     while not click.confirm(f"selected '{mcu_idx[selected_idx]}'. continue?"):
-            _mcu_ls()
-            selected_idx = int(click.prompt(f"select microcontroller {list(range(len(mcu_idx)))}"))
+        asmr.mcu.ls()
+        selected_idx = int(click.prompt(f"select microcontroller {list(range(len(mcu_idx)))}"))
 
     mcu = asmr.mcu.inventory[selected_idx]
     print(f"selected {mcu.name}")
-
-    # TODO do some configuration with this.
 
     log.info(f"==== Initializing '{project_name}' ====")
 
@@ -64,6 +62,13 @@ def project_init():
         # add mcu library submodule
         url = "https://github.com/asmr-systems/mcu-library.git"
         asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/libmcu'))
+
+        # configure
+        config_path = pathlib.Path(asmr.fs.project_config_filename)
+        with open(config_path, 'w+') as fd:
+            fd.write(f"[project]\n")
+            fd.write(f"name={project_name}\n")
+            fd.write(f"mcu={mcu.name}\n")
 
     log.info(f"==== Successfully Initialized '{project_name}' ====")
     log.info("")
