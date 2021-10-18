@@ -1,9 +1,11 @@
 """ Project Tools """
 
+import os
 import pathlib
 import shutil
 
 import click
+import jinja2
 
 import asmr.fs
 import asmr.git
@@ -41,7 +43,8 @@ def project_init():
 
     log.info(f"==== Initializing '{project_name}' ====")
 
-    asmr.software.update()
+    # TODO un-comment this!
+    #asmr.software.update()
 
     template_path = asmr.fs.home()/"module-template"
 
@@ -69,6 +72,27 @@ def project_init():
             fd.write(f"[project]\n")
             fd.write(f"name={project_name}\n")
             fd.write(f"mcu={mcu.name}\n")
+
+        #:::: Render Templates
+        #:::::::::::::::::::::
+        context = {
+            'project_name': project_name,
+            'cpu_cmsis_name': 'cm0plus',
+            'cpu_float_abi': 'soft',
+            'mcu_family': 'stm32f4',
+            'mcu_full_name': 'samd21g18a', # or maybe just name?
+            'mcu_startup_src': 'startup_stm32f4xx.s',
+            'mcu_linker_script': 'samd21g18a_flash.ld',
+        }
+        templates = [
+            'README.md.jinja',
+            'firmware/Makefile.jinja',
+        ]
+        for template in templates:
+            with open(template, 'r') as fd:
+                t = jinja2.Template(fd.read())
+            t.stream(**context).dump(template.split('.jinja')[0])
+            os.remove(template)
 
     log.info(f"==== Successfully Initialized '{project_name}' ====")
     log.info("")
