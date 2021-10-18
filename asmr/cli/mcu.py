@@ -27,7 +27,7 @@ def mcu_ls():
 
 
 @main.command('fetch')
-@click.argument('mcu_family',
+@click.argument('mcu_name',
                 required=True,
                 type=click.Choice([m.normalize_name() for m in asmr.mcu.inventory]))
 @click.argument('material',
@@ -37,14 +37,14 @@ def mcu_ls():
               is_flag=True,
               default=False,
               help="ignore cached values of downloaded materials and re-fetch.")
-def mcu_fetch(mcu_family, material, force):
+def mcu_fetch(mcu_name, material, force):
     """positional args: <MCU> <MATERIAL>
 
     MCU is the microcontroller family name.
 
     MATERIAL is the material to fetch.
     """
-    mcu = list(filter(lambda m : m.normalize_name() == mcu_family, asmr.mcu.inventory))[0]
+    mcu = list(filter(lambda m : m.normalize_name() == mcu_name, asmr.mcu.inventory))[0]
     if material == 'all':
         mcu.fetch()
     elif material == 'datasheet':

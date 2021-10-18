@@ -24,8 +24,11 @@ class Core(abc.ABC):
 
 @dataclasses.dataclass
 class Mcu(abc.ABC):
+    family: str
     name: str
     cpu: Core
+    linker_script: str
+    startup_source: str
     manufacturer: str
     datasheet_url: str
     software_url: t.Union[str, None]
@@ -53,6 +56,9 @@ class Mcu(abc.ABC):
 
         shutil.copy(cache/filename, datasheets_dir/f"{self.normalize_name()}.pdf")
         log.info(f"success fetching {filename}")
+
+    def normalize_family(self):
+        return self.family.lower().replace(' ', '')
 
     def normalize_name(self):
         return self.name.lower().replace(' ', '')

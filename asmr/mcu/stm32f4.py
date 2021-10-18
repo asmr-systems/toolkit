@@ -13,11 +13,14 @@ from .utils import extract_mcu_from_asf
 
 @dataclasses.dataclass
 class STM32F405(Mcu):
-    name: str          = 'STM32F405'
-    cpu: Core          = ARM_Cortex_M4
-    manufacturer: str  = 'ST Microelectronics'
-    datasheet_url: str = 'https://www.st.com/resource/en/datasheet/dm00037051.pdf'
-    software_url: str  = 'https://github.com/STMicroelectronics/cmsis_device_f4.git'
+    family: str         = 'STM32F4'
+    name: str           = 'STM32F405RG'
+    cpu: Core           = ARM_Cortex_M4
+    linker_script: str  = 'stm32f405.ld'
+    startup_source: str = 'startup_stm32f405xx.s'
+    manufacturer: str   = 'ST Microelectronics'
+    datasheet_url: str  = 'https://www.st.com/resource/en/datasheet/dm00037051.pdf'
+    software_url: str   = 'https://github.com/STMicroelectronics/cmsis_device_f4.git'
 
     def fetch_software(self, use_cached=True):
         """ fetch cmsis headers, src, linkers, and bootloader for STM32F405. """

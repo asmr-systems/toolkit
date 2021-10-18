@@ -77,12 +77,12 @@ def project_init():
         #:::::::::::::::::::::
         context = {
             'project_name': project_name,
-            'cpu_cmsis_name': 'cm0plus',
-            'cpu_float_abi': 'soft',
-            'mcu_family': 'stm32f4',
-            'mcu_full_name': 'samd21g18a', # or maybe just name?
-            'mcu_startup_src': 'startup_stm32f4xx.s',
-            'mcu_linker_script': 'samd21g18a_flash.ld',
+            'cpu_cmsis_name': mcu.cpu.cmsis_name,
+            'cpu_float_abi': 'hard' if mcu.cpu.fpu else 'soft',
+            'mcu_family': mcu.normalize_family(),
+            'mcu_full_name': mcu.normalize_name(),
+            'mcu_startup_src': mcu.startup_source,
+            'mcu_linker_script': mcu.linker_script,
         }
         templates = [
             'README.md.jinja',
