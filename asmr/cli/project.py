@@ -83,6 +83,7 @@ def project_init():
             'mcu_full_name': mcu.normalize_name(),
             'mcu_startup_src': mcu.startup_source,
             'mcu_linker_script': mcu.linker_script,
+            'bootloader_path': mcu.bootloader_path,
         }
         templates = [
             'README.md.jinja',

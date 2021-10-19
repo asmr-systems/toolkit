@@ -18,6 +18,7 @@ class SAMD21(Mcu):
     cpu: Core           = ARM_Cortex_M0Plus
     linker_script: str  = 'samd21g18a_flash.ld'
     startup_source: str = 'startup_samd21.c'
+    bootloader: str     = 'uf2-samdx1'
     manufacturer: str   = 'Atmel'
     datasheet_url: str  = 'https://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D21_DA1_Family_DataSheet_DS40001882F.pdf'
     software_url: str   = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'
@@ -42,31 +43,32 @@ class SAMD21(Mcu):
         cwd = pathlib.Path.cwd()
 
         #:::: Fetch CMSIS Device Headers
-        #::::::::::::::::::::::::
-        device_root = cwd/f"cmsis/device/{self.normalize_name()}"
+        #:::::::::::::::::::::::::::::::
+        device_root = cwd/f"cmsis/device/{self.normalize_family()}"
         device_root.mkdir(parents=True, exist_ok=True)
 
-        shutil.copytree(root/f"sam0/utils/cmsis/{self.normalize_name()}/include/",
+        shutil.copytree(root/f"sam0/utils/cmsis/{self.normalize_family()}/include/",
                         device_root/'include',
                         dirs_exist_ok=True)
-        shutil.copytree(root/f"sam0/utils/cmsis/{self.normalize_name()}/source/",
+        shutil.copytree(root/f"sam0/utils/cmsis/{self.normalize_family()}/source/",
                         device_root/'src',
                         dirs_exist_ok=True)
 
 
         #:::: Fetch Linker Scripts
         #:::::::::::::::::::::::::
-        linker_root = cwd/f"linkers/{self.normalize_name()}"
+        linker_root = cwd/f"linkers/{self.normalize_family()}"
         linker_root.mkdir(parents=True, exist_ok=True)
 
-        shutil.copytree(root/f"sam0/utils/linker_scripts/{self.normalize_name()}/gcc/",
+        shutil.copytree(root/f"sam0/utils/linker_scripts/{self.normalize_family()}/gcc/",
                         linker_root,
                         dirs_exist_ok=True)
 
         #:::: Fetch Bootloader
         #:::::::::::::::::::::
-        bootloader_url = 'https://github.com/asmr-systems/uf2-samdx1'
-        root = cache/pathlib.Path(pathlib.Path(bootloader_url.split("/")[-1]).stem)
+        bootloader_url = 'https://github.com/asmr-systems/uf2-samdx1.git'
+        repo_name = pathlib.Path(bootloader_url.split("/")[-1]).stem
+        root = cache/repo_name
 
         if root.exists():
             with asmr.fs.pushd(root):
@@ -74,7 +76,7 @@ class SAMD21(Mcu):
         else:
             asmr.git.clone(bootloader_url, root)
 
-        bootloader_root = cwd/f"bootloaders/{self.normalize_name()}"
+        bootloader_root = cwd/f"bootloaders/{repo_name}"
         bootloader_root.mkdir(parents=True, exist_ok=True)
 
         shutil.copytree(root, bootloader_root, dirs_exist_ok=True)

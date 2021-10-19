@@ -13,14 +13,15 @@ from .utils import extract_mcu_from_asf
 
 @dataclasses.dataclass
 class STM32F405(Mcu):
-    family: str         = 'STM32F4'
-    name: str           = 'STM32F405RG'
-    cpu: Core           = ARM_Cortex_M4
-    linker_script: str  = 'stm32f405.ld'
-    startup_source: str = 'startup_stm32f405xx.s'
-    manufacturer: str   = 'ST Microelectronics'
-    datasheet_url: str  = 'https://www.st.com/resource/en/datasheet/dm00037051.pdf'
-    software_url: str   = 'https://github.com/STMicroelectronics/cmsis_device_f4.git'
+    family: str          = 'STM32F4'
+    name: str            = 'STM32F405RG'
+    cpu: Core            = ARM_Cortex_M4
+    linker_script: str   = 'stm32f405.ld'
+    startup_source: str  = 'startup_stm32f405xx.s'
+    bootloader: str      = 'tinyuf2/ports/stm32f4'
+    manufacturer: str    = 'ST Microelectronics'
+    datasheet_url: str   = 'https://www.st.com/resource/en/datasheet/dm00037051.pdf'
+    software_url: str    = 'https://github.com/STMicroelectronics/cmsis_device_f4.git'
 
     def fetch_software(self, use_cached=True):
         """ fetch cmsis headers, src, linkers, and bootloader for STM32F405. """
@@ -63,7 +64,8 @@ class STM32F405(Mcu):
             else:
                 asmr.git.clone(bootloader_url, root)
 
-            bootloader_root = cwd/'bootloaders/stm32f4'
+            bootloader_root = cwd/f"bootloaders/{root}"
             bootloader_root.mkdir(parents=True, exist_ok=True)
 
-            shutil.copytree(root/'ports/stm32f4/', bootloader_root, dirs_exist_ok=True)
+            shutil.copytree(root, bootloader_root, dirs_exist_ok=True)
+            shutil.rmtree(bootloader_root/'.git')

@@ -29,6 +29,7 @@ class Mcu(abc.ABC):
     cpu: Core
     linker_script: str
     startup_source: str
+    bootloader: str
     manufacturer: str
     datasheet_url: str
     software_url: t.Union[str, None]
@@ -54,7 +55,7 @@ class Mcu(abc.ABC):
         datasheets_dir = pathlib.Path("datasheets")
         datasheets_dir.mkdir(exist_ok=True)
 
-        shutil.copy(cache/filename, datasheets_dir/f"{self.normalize_name()}.pdf")
+        shutil.copy(cache/filename, datasheets_dir/f"{self.normalize_family()}.pdf")
         log.info(f"success fetching {filename}")
 
     def normalize_family(self):
