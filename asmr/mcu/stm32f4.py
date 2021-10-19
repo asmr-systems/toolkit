@@ -54,7 +54,7 @@ class STM32F405(Mcu):
 
             #:::: Fetch Bootloader
             #:::::::::::::::::::::
-            bootloader_url = 'https://github.com/adafruit/tinyuf2.git'
+            bootloader_url = 'https://github.com/asmr-systems/tinyuf2'
             root = pathlib.Path(pathlib.Path(bootloader_url.split("/")[-1]).stem)
 
             if root.exists():

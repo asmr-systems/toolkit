@@ -65,7 +65,7 @@ class SAMD21(Mcu):
 
         #:::: Fetch Bootloader
         #:::::::::::::::::::::
-        bootloader_url = 'https://github.com/adafruit/uf2-samdx1.git'
+        bootloader_url = 'https://github.com/asmr-systems/uf2-samdx1'
         root = cache/pathlib.Path(pathlib.Path(bootloader_url.split("/")[-1]).stem)
 
         if root.exists():
