@@ -30,6 +30,7 @@ class Mcu(abc.ABC):
     linker_script: str
     startup_source: str
     bootloader: str
+    bootloader_build: str
     manufacturer: str
     datasheet_url: str
     software_url: t.Union[str, None]

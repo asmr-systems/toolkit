@@ -85,6 +85,7 @@ def project_init():
             'mcu_startup_src': mcu.startup_source,
             'mcu_linker_script': mcu.linker_script,
             'mcu_bootloader': mcu.bootloader,
+            'mcu_bootloader_build': mcu.bootloader_build,
         }
         templates = [
             'README.md.jinja',
