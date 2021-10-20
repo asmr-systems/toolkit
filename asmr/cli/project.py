@@ -63,8 +63,9 @@ def project_init():
         asmr.git.branch.rename('main')
 
         # add mcu library submodule
-        url = "https://github.com/asmr-systems/mcu-library.git"
-        asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/libmcu'))
+        url = "https://github.com/asmr-systems/mcu-support.git"
+        asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/'))
+        asmr.git.pull_submodules(capture_output=False)
 
         # configure
         config_path = pathlib.Path(asmr.fs.project_config_filename)
@@ -83,7 +84,7 @@ def project_init():
             'mcu_full_name': mcu.normalize_name(),
             'mcu_startup_src': mcu.startup_source,
             'mcu_linker_script': mcu.linker_script,
-            'bootloader_path': mcu.bootloader_path,
+            'mcu_bootloader': mcu.bootloader,
         }
         templates = [
             'README.md.jinja',

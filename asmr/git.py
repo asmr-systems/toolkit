@@ -3,6 +3,7 @@
 import enum
 import pathlib
 
+import asmr.fs
 import asmr.process
 
 
@@ -19,12 +20,17 @@ def init(repo_path: pathlib.Path):
     ret = asmr.process.run(cmd, stderr_to_stdout=True)
 
 def add_submodule(url: str, dst: pathlib.Path):
-    cmd = ['git', 'submodule', 'add', url, dst]
-    ret = asmr.process.run(cmd, stderr_to_stdout=True)
+    with asmr.fs.pushd(dst):
+        cmd = ['git', 'submodule', 'add', url]
+        ret = asmr.process.run(cmd, stderr_to_stdout=True)
 
-def pull_submodules():
-    cmd = ['git', 'submodule', 'update', '--init']
-    ret = asmr.process.run(cmd, stderr_to_stdout=True)
+def pull_submodules(repo_path: pathlib.Path = pathlib.Path('.'),
+                    capture_output=True):
+    with asmr.fs.pushd(repo_path):
+        cmd = ['git', 'submodule', 'update', '--init', '--recursive']
+        ret = asmr.process.run(cmd,
+                               stderr_to_stdout=True,
+                               capture=capture_output)
 
 def _branch_rename(new: str):
     cmd = ['git', 'branch', '-m', new]

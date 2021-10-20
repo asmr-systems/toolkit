@@ -55,17 +55,9 @@ class STM32F405(Mcu):
 
             #:::: Fetch Bootloader
             #:::::::::::::::::::::
-            bootloader_url = 'https://github.com/asmr-systems/tinyuf2'
-            root = pathlib.Path(pathlib.Path(bootloader_url.split("/")[-1]).stem)
+            bootloader_url = 'https://github.com/asmr-systems/tinyuf2.git'
 
-            if root.exists():
-                with asmr.fs.pushd(root):
-                    asmr.git.pull(branch='master')
-            else:
-                asmr.git.clone(bootloader_url, root)
+            bootloaders_dir = cwd/"bootloaders"
+            bootloaders_dir.mkdir(parents=True, exist_ok=True)
 
-            bootloader_root = cwd/f"bootloaders/{root}"
-            bootloader_root.mkdir(parents=True, exist_ok=True)
-
-            shutil.copytree(root, bootloader_root, dirs_exist_ok=True)
-            shutil.rmtree(bootloader_root/'.git')
+            asmr.git.add_submodule(bootloader_url, bootloaders_dir)
