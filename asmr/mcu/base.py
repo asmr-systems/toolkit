@@ -17,6 +17,7 @@ log = asmr.logging.get_logger()
 class Core(abc.ABC):
     name: str
     cmsis_name: str
+    gcc_name: str
     arch: str
     bits: int
     clock_mhz: float
@@ -27,6 +28,8 @@ class Mcu(abc.ABC):
     family: str
     name: str
     cpu: Core
+    cmsis_device_header: str
+    gcc_defines: t.List[str]
     linker_script: str
     startup_source: str
     bootloader: str

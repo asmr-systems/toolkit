@@ -3,6 +3,7 @@
 import dataclasses
 import pathlib
 import shutil
+import typing as t
 
 import asmr.fs
 from asmr.mcu.cores import ARM_Cortex_M0Plus
@@ -13,16 +14,18 @@ from .utils import extract_mcu_from_asf
 
 @dataclasses.dataclass
 class SAMD21(Mcu):
-    family: str           = 'SAMD21'
-    name: str             = 'SAMD21G18A'
-    cpu: Core             = ARM_Cortex_M0Plus
-    linker_script: str    = 'samd21g18a_flash.ld'
-    startup_source: str   = 'startup_samd21.c'
-    bootloader: str       = 'uf2-samdx1'
-    bootloader_build: str = 'build/asmr_systems'
-    manufacturer: str     = 'Atmel'
-    datasheet_url: str    = 'https://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D21_DA1_Family_DataSheet_DS40001882F.pdf'
-    software_url: str     = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'
+    family: str              = 'SAMD21'
+    name: str                = 'SAMD21G18A'
+    cpu: Core                = ARM_Cortex_M0Plus
+    gcc_defines: t.List[str] = ['-D__SAMD21G18A__']
+    sources: t.List[str]     = ['gcc/startup_samd21.c']
+    cmsis_device_header: str = 'samd21.h'
+    linker_script: str       = 'samd21g18a_flash.ld'
+    bootloader: str          = 'uf2-samdx1'
+    bootloader_build: str    = 'build/asmr_systems'
+    manufacturer: str        = 'Atmel'
+    datasheet_url: str       = 'https://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D21_DA1_Family_DataSheet_DS40001882F.pdf'
+    software_url: str        = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'
 
     def fetch_software(self, use_cached=True):
         filename = self.software_url.split("/")[-1]

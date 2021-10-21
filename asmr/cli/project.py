@@ -79,10 +79,12 @@ def project_init():
         context = {
             'project_name': project_name,
             'cpu_cmsis_name': mcu.cpu.cmsis_name,
+            'cpu_gcc_name': mcu.cpu.gcc_name,
             'cpu_float_abi': 'hard' if mcu.cpu.fpu else 'soft',
             'mcu_family': mcu.normalize_family(),
             'mcu_full_name': mcu.normalize_name(),
-            'mcu_startup_src': mcu.startup_source,
+            'mcu_defines': mcu.gcc_defines,
+            'mcu_sources': mcu.sources,
             'mcu_linker_script': mcu.linker_script,
             'mcu_bootloader': mcu.bootloader,
             'mcu_bootloader_build': mcu.bootloader_build,
@@ -90,6 +92,7 @@ def project_init():
         templates = [
             'README.md.jinja',
             'firmware/Makefile.jinja',
+            'firmware/src/main.cc.jinja',
         ]
         for template in templates:
             with open(template, 'r') as fd:
