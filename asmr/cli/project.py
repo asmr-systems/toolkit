@@ -43,8 +43,7 @@ def project_init():
 
     log.info(f"==== Initializing '{project_name}' ====")
 
-    # TODO un-comment this!
-    #asmr.software.update()
+    asmr.software.update()
 
     template_path = asmr.fs.home()/"module-template"
 
@@ -83,6 +82,7 @@ def project_init():
             'cpu_float_abi': 'hard' if mcu.cpu.fpu else 'soft',
             'mcu_family': mcu.normalize_family(),
             'mcu_full_name': mcu.normalize_name(),
+            'mcu_cmsis_device_header': mcu.cmsis_device_header,
             'mcu_defines': mcu.gcc_defines,
             'mcu_sources': mcu.sources,
             'mcu_linker_script': mcu.linker_script,

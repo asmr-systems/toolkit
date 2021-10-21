@@ -28,10 +28,10 @@ class Mcu(abc.ABC):
     family: str
     name: str
     cpu: Core
-    cmsis_device_header: str
+    sources: t.List[str]
     gcc_defines: t.List[str]
+    cmsis_device_header: str
     linker_script: str
-    startup_source: str
     bootloader: str
     bootloader_build: str
     manufacturer: str

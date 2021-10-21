@@ -12,9 +12,9 @@ class SAMD11(Mcu):
     family: str              = 'SAMD11'
     name: str                = 'SAMD11xxxx'
     cpu: Core                = ARM_Cortex_M0Plus
-    gcc_defines: t.List[str] = []
+    sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['?'])
+    gcc_defines: t.List[str] = dataclasses.field(default_factory=lambda: ['?'])
     cmsis_device_header: str = 'samd11.h'
-    sources: t.List[str]     = []
     linker_script: str       = '???'
     bootloader: str          = 'uf2-samdx1'
     bootloader_build: str    = 'build/asmr_systems'

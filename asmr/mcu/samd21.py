@@ -17,8 +17,8 @@ class SAMD21(Mcu):
     family: str              = 'SAMD21'
     name: str                = 'SAMD21G18A'
     cpu: Core                = ARM_Cortex_M0Plus
-    gcc_defines: t.List[str] = ['-D__SAMD21G18A__']
-    sources: t.List[str]     = ['gcc/startup_samd21.c']
+    sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_samd21.c'])
+    gcc_defines: t.List[str] = dataclasses.field(default_factory=lambda: ['-D__SAMD21G18A__'])
     cmsis_device_header: str = 'samd21.h'
     linker_script: str       = 'samd21g18a_flash.ld'
     bootloader: str          = 'uf2-samdx1'
