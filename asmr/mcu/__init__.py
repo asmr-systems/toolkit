@@ -1,10 +1,12 @@
 """ Tools for micro controller support. """
+from .samd10d13a import SAMD10D13A
 from .samd11 import SAMD11
 from .samd21 import SAMD21
 from .stm32f4 import STM32F405
 
 
 inventory = [
+    SAMD10D13A(),
     SAMD11(),
     SAMD21(),
     STM32F405(),

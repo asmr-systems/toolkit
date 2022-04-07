@@ -5,7 +5,7 @@ import click
 import asmr.software
 
 
-@click.command("update")
+@click.command("software")
 def update():
     """ update software. """
     asmr.software.update()

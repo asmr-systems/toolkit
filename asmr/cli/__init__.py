@@ -8,6 +8,7 @@ import asmr.cli.mcu
 import asmr.cli.project
 import asmr.cli.software
 import asmr.cli.test
+import asmr.cli.update
 
 
 
@@ -17,13 +18,15 @@ def main():
     """ cli entrypoint """
     pass
 
-
+# TODO: refactor commands to be verbs. new should import subcommands from
+# project, etc (just like how update does it.)
 main.add_command(test.main)
 main.add_command(build.main)
 main.add_command(mcu.main)
 main.add_command(dev.main)
 main.add_command(project.new)
-main.add_command(software.update)
+# main.add_command(software.update) # TODO remove this if there are no problems encountered.
+main.add_command(update.main)
 
 
 @main.command('testing')

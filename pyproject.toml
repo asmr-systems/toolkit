@@ -16,6 +16,7 @@ dependencies = [
     "watchdog >=2.1.6",
     "jinja2 >=3.0.0",
     "pyvisa >=1.11.3",
+    "toml >=0.10.2",
 ]
 
 [project.urls]
