@@ -40,7 +40,10 @@ def jinja_ctx_from_mcu(project_name, mcu):
             'mcu_bootloader': mcu.bootloader,
             'mcu_bootloader_build': mcu.bootloader_build,
             'compatible_libraries': [d.stem for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr"/"libraries").iterdir()],
-            'libasmr_srcs': [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.c')] + [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.cc')]
+            'libasmr_srcs': [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.c')] + [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.cc')],
+            'bin_path': f'build/{project_name}.bin',
+            'rom_addr': mcu.rom_address,
+            'mcu_jlink_target': mcu.jlink_target,
         }
 
 
@@ -51,8 +54,8 @@ def render_template(template, context):
     os.remove(template)
 
 
-@click.command('makefile')
-def update_makefile():
+@click.command('build-system')
+def update_build_system():
     project_root = asmr.fs.get_project_root()
 
     # read project.toml from project root
@@ -72,6 +75,9 @@ def update_makefile():
     # get the context from the mcu
     context = jinja_ctx_from_mcu(project_properties['project']['name'], mcu)
 
+    #:::: Update Makefile
+    #::::::::::::::::::::
+
     # remove old Makefile
     os.remove(project_root/"firmware/Makefile")
 
@@ -81,6 +87,19 @@ def update_makefile():
 
     # render jinja template
     render_template(project_root/"firmware/Makefile.jinja", context)
+
+    #:::: Update JLink Flash Script
+    #::::::::::::::::::::::::::::::
+
+    # remove old jlink file
+    os.remove(project_root/"firmware/flash.jlink")
+
+    # copy over Jlink Flash template
+    template_path = shutil.copyfile(asmr.fs.home()/"module-template/firmware/flash.jlink.jinja",
+                                    project_root/"firmware/flash.jlink.jinja")
+
+    # render jinja template
+    render_template(project_root/"firmware/flash.jlink.jinja", context)
 
     return
 

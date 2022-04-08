@@ -27,10 +27,12 @@ class Core(abc.ABC):
 class Mcu(abc.ABC):
     name: str
     cpu: Core
+    rom_address: int
     sources: t.List[str]
     gcc_defines: t.List[str]
     cmsis_device_header: str
     linker_script: str
+    jlink_target: str
     bootloader: str
     bootloader_build: str
     manufacturer: str

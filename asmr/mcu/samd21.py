@@ -9,13 +9,15 @@ import asmr.fs
 from asmr.mcu.cores import ARM_Cortex_M0Plus
 
 from .base import Mcu, Core
+from .samd import SAMD
 from .utils import extract_mcu_from_asf
 
 
 @dataclasses.dataclass
-class SAMD21(Mcu):
+class SAMD21(SAMD):
     name: str                = 'SAMD21G18A'
     cpu: Core                = ARM_Cortex_M0Plus
+    rom_address: int         = 0x00000000
     sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_samd21.c'])
     gcc_defines: t.List[str] = dataclasses.field(default_factory=lambda: ['-D__SAMD21G18A__'])
     cmsis_device_header: str = 'samd21.h'
@@ -23,6 +25,7 @@ class SAMD21(Mcu):
     bootloader: str          = 'uf2-samdx1'
     bootloader_build: str    = 'build/asmr_systems'
     manufacturer: str        = 'Atmel'
+    jlink_target: str        = 'ATSAMD21G18A'
     datasheet_url: str       = 'https://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D21_DA1_Family_DataSheet_DS40001882F.pdf'
     software_url: str        = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'
 

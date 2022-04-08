@@ -11,4 +11,4 @@ def main():
     pass
 
 main.add_command(software.update)
-main.add_command(project.update_makefile)
+main.add_command(project.update_build_system)

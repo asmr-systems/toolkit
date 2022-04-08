@@ -3,6 +3,8 @@
 from .base import Mcu
 
 class SAMD(Mcu):
+    rom_address: int = 0x00000000
+
     def family(self):
         return 'SAMD'
 

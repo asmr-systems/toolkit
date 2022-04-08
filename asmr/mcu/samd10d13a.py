@@ -15,12 +15,14 @@ from asmr.mcu.cores import ARM_Cortex_M0Plus
 class SAMD10D13A(SAMD):
     name: str                = 'SAMD10D13A'
     cpu: Core                = ARM_Cortex_M0Plus
+    rom_address: int         = 0x00000000
     sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_samd10.c'])
     gcc_defines: t.List[str] = dataclasses.field(default_factory=lambda: ['__SAMD10D13AM__'])
     cmsis_device_header: str = 'samd10.h'
     linker_script: str       = 'samd10d13am_flash.ld'
     bootloader: str          = '-'
     bootloader_build: str    = '-'
+    jlink_target: str        = 'ATSAMD10D13A'
     manufacturer: str        = 'Atmel'
     datasheet_url: str       = 'https://www.mouser.com/datasheet/2/268/atmel-42242-sam-d10_summary-1368819.pdf'
     software_url: str        = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'

@@ -17,12 +17,14 @@ class STM32F405(Mcu):
     name: str                = 'STM32F405RG'
     cpu: Core                = ARM_Cortex_M4
     cmsis_device_header: str = 'stm32f4xx.h'
+    rom_address: int         = 0x08000000
     sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_stm32f405xx.s', 'system_stm32f4xx.c'])
     gcc_defines: t.List[str] = dataclasses.field(default_factory=lambda: ['-DSTM32F405xx'])
     linker_script: str       = 'stm32f405.ld'
     bootloader: str          = 'tinyuf2/ports/stm32f4'
     bootloader_build: str    = '_build/asmr_systems'
     manufacturer: str        = 'ST Microelectronics'
+    jlink_target: str        = 'STM32F405RG'
     datasheet_url: str       = 'https://www.st.com/resource/en/datasheet/dm00037051.pdf'
     software_url: str        = 'https://github.com/STMicroelectronics/cmsis_device_f4.git'
 
