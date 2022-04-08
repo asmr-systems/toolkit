@@ -179,6 +179,14 @@ def up(machine_id: str=None):
         asmr.process.run(f"vagrant up {machine_id}")
     else:
         # we must be within the project_root/.dev-environ here.
+
+        # see:
+        # https://superuser.com/questions/956622/no-usb-devices-available-in-virtualbox
+        log.info(f"adding current user to virtualbox group")
+        asmr.process.run("sudo adduser $USER vboxusers")
+        log.info("NOTE: if this is the first time running this, you might have too reboot")
+        log.info("      otherwise, you may not be able to detect USB devices within the guest.")
+
         log.info(f"Creating ASMR Dev Environment...")
         log.info(f"This will take several minutes...please be patient...")
         asmr.process.run(f"vagrant up", capture=False)
