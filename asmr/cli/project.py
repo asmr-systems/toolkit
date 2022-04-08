@@ -31,6 +31,7 @@ def jinja_ctx_from_mcu(project_name, mcu):
             'cpu_gcc_name': mcu.cpu.gcc_name,
             'cpu_float_abi': 'hard' if mcu.cpu.fpu else 'soft',
             'mcu_family': mcu.normalize_family(),
+            'mcu_series': mcu.normalize_series(),
             'mcu_full_name': mcu.normalize_name(),
             'mcu_cmsis_device_header': mcu.cmsis_device_header,
             'mcu_defines': mcu.gcc_defines,
@@ -38,6 +39,8 @@ def jinja_ctx_from_mcu(project_name, mcu):
             'mcu_linker_script': mcu.linker_script,
             'mcu_bootloader': mcu.bootloader,
             'mcu_bootloader_build': mcu.bootloader_build,
+            'compatible_libraries': [d.stem for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr"/"libraries").iterdir()],
+            'libasmr_srcs': [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.c')] + [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.cpp')]
         }
 
 

@@ -14,7 +14,6 @@ from .utils import extract_mcu_from_asf
 
 @dataclasses.dataclass
 class SAMD21(Mcu):
-    family: str              = 'SAMD21'
     name: str                = 'SAMD21G18A'
     cpu: Core                = ARM_Cortex_M0Plus
     sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_samd21.c'])
@@ -26,6 +25,12 @@ class SAMD21(Mcu):
     manufacturer: str        = 'Atmel'
     datasheet_url: str       = 'https://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D21_DA1_Family_DataSheet_DS40001882F.pdf'
     software_url: str        = 'https://ww1.microchip.com/downloads/en/DeviceDoc/ASF3.51.0_StandalonePackage.zip'
+
+    def family():
+        return 'SAMD'
+
+    def series():
+        return 'SAMD21'
 
     def fetch_software(self, use_cached=True):
         filename = self.software_url.split("/")[-1]

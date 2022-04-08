@@ -25,7 +25,6 @@ class Core(abc.ABC):
 
 @dataclasses.dataclass
 class Mcu(abc.ABC):
-    family: str
     name: str
     cpu: Core
     sources: t.List[str]
@@ -47,6 +46,16 @@ class Mcu(abc.ABC):
         """ Abstract method for fetching vendor support software. """
         pass
 
+    @abc.abstractmethod
+    def family(self):
+        """ Abstract method for parsing mcu family from name. """
+        pass
+
+    @abc.abstractmethod
+    def series(self):
+        """ Abstract method for parsing mcu series from name. """
+        pass
+
     def fetch_datasheet(self, use_cached=True):
         filename = self.datasheet_url.split('/')[-1]
         cache = asmr.fs.cache()
@@ -63,7 +72,10 @@ class Mcu(abc.ABC):
         log.info(f"success fetching {filename}")
 
     def normalize_family(self):
-        return self.family.lower().replace(' ', '')
+        return self.family().lower().replace(' ', '')
+
+    def normalize_series(self):
+        return self.series().lower().replace(' ', '')
 
     def normalize_name(self):
         return self.name.lower().replace(' ', '')

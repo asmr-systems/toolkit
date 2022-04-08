@@ -7,12 +7,12 @@ import typing as t
 
 import asmr.fs
 from .base import Mcu, Core
+from .samd import SAMD
 from asmr.mcu.cores import ARM_Cortex_M0Plus
 
 
 @dataclasses.dataclass
-class SAMD10D13A(Mcu):
-    family: str              = 'SAMD10'
+class SAMD10D13A(SAMD):
     name: str                = 'SAMD10D13A'
     cpu: Core                = ARM_Cortex_M0Plus
     sources: t.List[str]     = dataclasses.field(default_factory=lambda: ['gcc/startup_samd10.c'])
