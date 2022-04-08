@@ -47,7 +47,7 @@ def jinja_ctx_from_mcu(project_name, mcu):
 def render_template(template, context):
     with open(template, 'r') as fd:
         t = jinja2.Template(fd.read())
-    t.stream(**context).dump(template.stem)
+    t.stream(**context).dump(str(template.parent/template.stem))
     os.remove(template)
 
 
@@ -127,12 +127,15 @@ def project_init():
         # add mcu library submodule
         url = "https://github.com/asmr-systems/mcu-support.git"
         asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/'))
-        asmr.git.pull_submodules(capture_output=False)
-
         # add libasmr submodule
         url = "https://github.com/asmr-systems/libasmr.git"
         asmr.git.add_submodule(url, pathlib.Path('firmware/vendor/'))
-        asmr.git.pull_submodules(capture_output=False)
+        # non-recursively pull submodules
+        asmr.git.pull_submodules(capture_output=False, recursive=False)
+
+        if click.confirm(f"include bootloaders?", default=False):
+            asmr.git.pull_submodules(pathlib.Path('firmware/vendor/mcu-support'),
+                                     capture_output=False)
 
         # configure
         config_path = pathlib.Path(asmr.fs.project_config_filename)
@@ -145,12 +148,12 @@ def project_init():
         #:::::::::::::::::::::
         context = jinja_ctx_from_mcu(project_name, mcu)
         templates = [
-            'README.md.jinja',
-            'firmware/Makefile.jinja',
-            'firmware/src/main.cc.jinja',
+            pathlib.Path('README.md.jinja'),
+            pathlib.Path('firmware/Makefile.jinja'),
+            pathlib.Path('firmware/src/main.cc.jinja'),
         ]
         for template in templates:
-            render_template(template)
+            render_template(template, context)
 
     log.info(f"==== Successfully Initialized '{project_name}' ====")
     log.info("")

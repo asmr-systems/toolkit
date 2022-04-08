@@ -25,12 +25,28 @@ def add_submodule(url: str, dst: pathlib.Path):
         ret = asmr.process.run(cmd, stderr_to_stdout=True)
 
 def pull_submodules(repo_path: pathlib.Path = pathlib.Path('.'),
-                    capture_output=True):
+                    submodules=None,
+                    capture_output=True,
+                    recursive=True):
     with asmr.fs.pushd(repo_path):
-        cmd = ['git', 'submodule', 'update', '--init', '--recursive']
-        ret = asmr.process.run(cmd,
-                               stderr_to_stdout=True,
-                               capture=capture_output)
+        if submodules == None:
+            # default behavior, pull all submodules recursively
+            cmd = ['git', 'submodule', 'update', '--init']
+            if recursive:
+                cmd += ['--recursive']
+            ret = asmr.process.run(cmd,
+                                   stderr_to_stdout=True,
+                                   capture=capture_output)
+        else:
+            # iterate through submodules listed and pull
+            for submodule in submodules:
+                cmd = ['git', 'submodule', 'update', '--init']
+                if recursive:
+                    cmd += ['--recursive']
+                cmd += [submodule]
+                ret = asmr.process.run(cmd,
+                                       stderr_to_stdout=True,
+                                       capture=capture_output)
 
 def _branch_rename(new: str):
     cmd = ['git', 'branch', '-m', new]
