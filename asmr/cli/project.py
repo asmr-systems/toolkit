@@ -40,7 +40,7 @@ def jinja_ctx_from_mcu(project_name, mcu):
             'mcu_bootloader': mcu.bootloader,
             'mcu_bootloader_build': mcu.bootloader_build,
             'compatible_libraries': [d.stem for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr"/"libraries").iterdir()],
-            'libasmr_srcs': [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.c')] + [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.cpp')]
+            'libasmr_srcs': [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.c')] + [d.relative_to(asmr.fs.get_project_root()/"firmware"/"vendor") for d in (asmr.fs.get_project_root()/"firmware"/"vendor"/"libasmr").rglob('*.cc')]
         }
 
 
