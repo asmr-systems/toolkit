@@ -57,7 +57,6 @@ def update_makefile():
 
     # read project.toml from project root
     project_properties = toml.load(project_root/"project.asmr.toml")
-    print(project_properties['project']['mcu'])
 
     # get mcu being used
     mcu = None
