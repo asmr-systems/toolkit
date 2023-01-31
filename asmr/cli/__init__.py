@@ -9,7 +9,7 @@ import asmr.cli.project
 import asmr.cli.software
 import asmr.cli.test
 import asmr.cli.update
-
+import asmr.cli.oscilloscope
 
 
 @click.group(help="ASMR Labs command-line tool.")
@@ -27,6 +27,7 @@ main.add_command(dev.main)
 main.add_command(project.new)
 # main.add_command(software.update) # TODO remove this if there are no problems encountered.
 main.add_command(update.main)
+main.add_command(oscilloscope.main)
 
 
 @main.command('testing')
