@@ -14,11 +14,23 @@ import matplotlib.pyplot as plt
 # it worked!
 
 # for commands see:
+# https://www.batronix.com/pdf/Rigol/ProgrammingGuide/DS1000DE_ProgrammingGuide_EN.pdf
 # https://web.archive.org/web/20230131210803/http://nnp.ucsd.edu/Lab_Equip_Manuals/Rigol_DS1000_Progr_Manu.pdf
 # also see:
 # https://www.cibomahto.com/2010/04/controlling-a-rigol-oscilloscope-using-linux-and-python/
 # also see:
 # https://gist.github.com/pklaus/7e4cbac1009b668eafab
+#
+# see this for data aqcuisition:
+# https://github.com/wd5gnr/qrigol/blob/master/scopedata.cpp#L191
+# this also matches with my observations:
+# https://github.com/wd5gnr/qrigol/blob/master/scopedata.cpp#L216
+#
+# basically it looks like the strategy is to perform long memory sampling
+# after stopping acquire.
+# it looks like all other methods that get "realtime" data acquisition from this
+# oscilloscope are just getting the "measurements" which don't include the actual
+# waveform. (dont be fooled, the Amplitude measurement is similar to the Vpp).
 
 RIGOL_INSTR_ID = '::DS1ET' #'USB0::6833::1416::DS1ET171605654\x00::0::INSTR'
 
