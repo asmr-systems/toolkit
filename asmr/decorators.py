@@ -3,8 +3,6 @@
 import datetime
 import functools
 
-import asmr.fs
-
 
 def interval(ms: int):
     """ Only execute the decorated function if 'ms' time has passed. """
@@ -37,6 +35,8 @@ def exec_only_within_dev_env(log=None):
     def _decorator(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
+            import asmr.fs
+
             if asmr.fs.within_dev_env():
                 fn(*args, **kwargs)
             else:
@@ -51,6 +51,8 @@ def exec_only_outside_dev_env(log=None):
     def _decorator(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
+            import asmr.fs
+
             if not asmr.fs.within_dev_env():
                 fn(*args, **kwargs)
             else:

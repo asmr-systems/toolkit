@@ -32,31 +32,31 @@ class SnapShot:
     chan1_vpp: float = field(init=False)
     chan2_vpp: float = field(init=False)
 
+    @staticmethod
+    def load_snapshots(filename: str):
+        snapshots = []
+        snapshot = None
+        idx = 0
 
-def load_snapshots(filename: str):
-    snapshots = []
-    snapshot = None
-    idx = 0
+        with open(filename) as fd:
+            for line in fd:
+                line = line.split(",")
+                data = np.asarray(line[4:], dtype='float')
 
-    with open(filename) as fd:
-        for line in fd:
-            line = line.split(",")
-            data = np.asarray(line[4:], dtype='float')
+                if idx%2 == 0:
+                    snapshot = SnapShot()
+                    snapshot.timeUnit = line[2]
+                    snapshot.chan1_vpp = line[3]
+                    snapshot.time = data[0::2]
+                    snapshot.chan1 = data[1::2]
+                else:
+                    snapshot.chan2 = data[1::2]
+                    snapshot.chan2_vpp = line[3]
+                    snapshots.append(snapshot)
 
-            if idx%2 == 0:
-                snapshot = SnapShot()
-                snapshot.timeUnit = line[2]
-                snapshot.chan1_vpp = line[3]
-                snapshot.time = data[0::2]
-                snapshot.chan1 = data[1::2]
-            else:
-                snapshot.chan2 = data[1::2]
-                snapshot.chan2_vpp = line[3]
-                snapshots.append(snapshot)
+                idx += 1
 
-            idx += 1
-
-    return snapshots
+        return snapshots
 
 
 class RigolDS1052E(Instrument):
@@ -97,7 +97,7 @@ class RigolDS1052E(Instrument):
 
     def plot(self, filename=None):
         if filename != None:
-            self.snapshots = load_snapshots(filename)
+            self.snapshots = SnapShot.load_snapshots(filename)
         else:
             if len(self.snapshots) == 0:
                 self.snapshot_waveforms()
