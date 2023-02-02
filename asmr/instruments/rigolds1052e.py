@@ -46,12 +46,12 @@ class SnapShot:
                 if idx%2 == 0:
                     snapshot = SnapShot()
                     snapshot.timeUnit = line[2]
-                    snapshot.chan1_vpp = line[3]
+                    snapshot.chan1_vpp = float(line[3])
                     snapshot.time = data[0::2]
                     snapshot.chan1 = data[1::2]
                 else:
                     snapshot.chan2 = data[1::2]
-                    snapshot.chan2_vpp = line[3]
+                    snapshot.chan2_vpp = float(line[3])
                     snapshots.append(snapshot)
 
                 idx += 1
