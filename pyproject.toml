@@ -23,7 +23,8 @@ dependencies = [
     "toml >= 0.10.2",
     "numpy >= 1.24.1",
     "matplotlib >= 3.6.3",
-    "jupyterlab >= 3.6.0"
+    "jupyterlab >= 3.6.0",
+    "svgwrite >= 1.4.3"
 ]
 
 [project.urls]

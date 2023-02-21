@@ -4,6 +4,7 @@ import click
 
 import asmr.cli.build
 import asmr.cli.dev
+import asmr.cli.design
 import asmr.cli.mcu
 import asmr.cli.project
 import asmr.cli.software
@@ -24,6 +25,7 @@ main.add_command(test.main)
 main.add_command(build.main)
 main.add_command(mcu.main)
 main.add_command(dev.main)
+main.add_command(design.main)
 main.add_command(project.new)
 # main.add_command(software.update) # TODO remove this if there are no problems encountered.
 main.add_command(update.main)
