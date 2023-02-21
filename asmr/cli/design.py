@@ -26,7 +26,7 @@ def main():
 @click.option('--pitch', default=6.0, help="node size (mm)", type=float)
 @click.option('--xwidth', default=0.5, help="width of x electrode traces (mm)", type=float)
 @click.option('--ywidth', default=0.5, help="width of y electrode traces (mm)", type=float)
-@click.option('-s', '--separation', default=0.5, help="separation of traces", type=float)
+@click.option('-s', '--separation', default=0.3, help="separation of traces", type=float)
 @click.option('-f', '--filename', required=True, help="output file (.svg)")
 def touch_grid(filename, pattern, xsize, ysize, pitch, xwidth, ywidth, separation):
     """ generate capacitive touch design. """

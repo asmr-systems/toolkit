@@ -39,7 +39,8 @@ def create_interleaved_grid(grid: CapacitiveGrid):
     ydigits_per_node -= 1
     remaining_space = grid.pitch - ydigits_per_node*(grid.xwidth + grid.ywidth)
     grid.separation = remaining_space / (2*ydigits_per_node)
-    xdigits = (ydigits_per_node * grid.size[1]) + 1
+    n_xdigits = (ydigits_per_node * grid.size[1]) + 1
+    dy_xdigits = grid.separation*2 + grid.ywidth + grid.xwidth
 
     for column in range(grid.size[0]):
         # create X columns
@@ -54,9 +55,17 @@ def create_interleaved_grid(grid: CapacitiveGrid):
 
         # the minimum columnar digits (surrounding each node)
         min_x_digits = grid.size[1] + 1
-
-    #
-    print(grid.size)
+        x_length = grid.pitch - grid.ywidth - (2*grid.separation)
+        for digit in range(n_xdigits):
+            x_start = xcenter - (x_length/2)
+            x_end   = xcenter + (x_length/2)
+            y = digit * dy_xdigits
+            grid.dwg.add(grid.dwg.line(
+                (x_start*mm, y*mm),
+                (x_end*mm, y*mm),
+                stroke=svgwrite.rgb(0,0,0),
+                stroke_width=grid.xwidth*mm
+            ))
 
 
 def create_diamond_grid(grid: CapacitiveGrid):
