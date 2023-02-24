@@ -12,17 +12,19 @@ class GridPattern(Enum):
 class CapacitiveGrid:
     def __init__(self,
                  filename: str,
-                 size=(1, 1),     # (X, Y)
-                 pitch=5,         # width|height of button (mm)
-                 xwidth=0.5,      # width of x electrode traces
-                 ywidth=0.5,      # width of y electrode traces
-                 separation=0.5): # min separation between electrodes
+                 size=(1, 1),      # (X, Y)
+                 pitch=5,          # width|height of button (mm)
+                 xwidth=0.5,       # width of x electrode traces
+                 ywidth=0.5,       # width of y electrode traces
+                 separation=0.5,   # min separation between electrodes
+                 use_color=False): # display different color electrodes
         self.filename = filename
         self.size = size
         self.pitch = pitch
         self.xwidth = xwidth
         self.ywidth = ywidth
         self.separation = separation
+        self.use_color = use_color
         self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
 
     def save(self):
@@ -52,7 +54,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
         grid.dwg.add(grid.dwg.line(
             (xcenter*mm, y_offset*mm),
             (xcenter*mm, (ylength + y_offset)*mm),
-            stroke=svgwrite.rgb(0,0,0),
+            stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
             stroke_width=grid.xwidth*mm
         ))
 
@@ -66,7 +68,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             grid.dwg.add(grid.dwg.line(
                 (x_start*mm, y*mm),
                 (x_end*mm, y*mm),
-                stroke=svgwrite.rgb(0,0,0),
+                stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
                 stroke_width=grid.xwidth*mm,
                 stroke_linecap='round'
             ))
@@ -79,7 +81,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             grid.dwg.add(grid.dwg.line(
                 (xcenter*mm, y_start*mm),
                 (xcenter*mm, (y_start+ylength)*mm),
-                stroke=svgwrite.rgb(0,0,0),
+                stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
                 stroke_width=grid.ywidth*mm
             ))
             for digit in range(ydigits_per_node):
@@ -98,7 +100,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 grid.dwg.add(grid.dwg.line(
                     (digit_x_start*mm, digit_y*mm),
                     ((digit_x_start + digit_length)*mm, digit_y*mm),
-                    stroke=svgwrite.rgb(0,0,0),
+                    stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
                     stroke_width=grid.ywidth*mm,
                     stroke_linecap='round'
                 ))
@@ -114,12 +116,14 @@ class CapacitiveGridGenerator:
                  pitch=5,
                  xwidth=0.5,
                  ywidth=0.5,
-                 separation=0.5):
+                 separation=0.5,
+                 use_color=False):
         self.size = (1, 1) if size is None else size
         self.pitch = 5.0 if pitch is None else pitch
         self.xwidth = 0.5 if xwidth is None else xwidth
         self.ywidth = 0.5 if ywidth is None else ywidth
         self.separation = 0.5 if separation is None else separation
+        self.use_color = False if use_color is None else use_color
 
     def create(self, pattern: GridPattern, filename: str) -> CapacitiveGrid:
         grid = CapacitiveGrid(filename,
@@ -127,7 +131,8 @@ class CapacitiveGridGenerator:
                               pitch = self.pitch,
                               xwidth = self.xwidth,
                               ywidth = self.ywidth,
-                              separation = self.separation)
+                              separation = self.separation,
+                              use_color = self.use_color)
         if pattern is GridPattern.Interleaved:
             create_interleaved_grid(grid)
         elif pattern is GridPattern.Diamond:
