@@ -58,7 +58,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
 
         # the minimum columnar digits (surrounding each node)
         min_x_digits = grid.size[1] + 1
-        x_length = grid.pitch - grid.ywidth - (2*grid.separation)
+        x_length = grid.pitch - grid.ywidth - (2*grid.separation) - grid.xwidth
         for digit in range(n_xdigits):
             x_start = xcenter - (x_length/2)
             x_end   = xcenter + (x_length/2)
@@ -67,7 +67,8 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 (x_start*mm, y*mm),
                 (x_end*mm, y*mm),
                 stroke=svgwrite.rgb(0,0,0),
-                stroke_width=grid.xwidth*mm
+                stroke_width=grid.xwidth*mm,
+                stroke_linecap='round'
             ))
 
     for row in range(grid.size[1]):
@@ -86,19 +87,20 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 digit_length = None
                 digit_x_start = None
                 if column > 0 and column < (grid.size[0]):
-                    digit_length = grid.pitch - grid.separation*2 - grid.xwidth
+                    digit_length = grid.pitch - grid.separation*2 - grid.xwidth - grid.ywidth
                     digit_x_start = xcenter - digit_length/2
                 elif column == 0:
-                    digit_x_start = xcenter - grid.ywidth/2
-                    digit_length  = grid.pitch/2 - grid.xwidth/2 - grid.separation + grid.ywidth/2
+                    digit_x_start = xcenter
+                    digit_length  = grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2
                 elif column == grid.size[0]:
-                    digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation + grid.ywidth/2)
-                    digit_x_start = xcenter + grid.ywidth/2
+                    digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2)
+                    digit_x_start = xcenter
                 grid.dwg.add(grid.dwg.line(
                     (digit_x_start*mm, digit_y*mm),
                     ((digit_x_start + digit_length)*mm, digit_y*mm),
                     stroke=svgwrite.rgb(0,0,0),
-                    stroke_width=grid.ywidth*mm
+                    stroke_width=grid.ywidth*mm,
+                    stroke_linecap='round'
                 ))
 
 def create_diamond_grid(grid: CapacitiveGrid):
