@@ -47,11 +47,15 @@ def create_interleaved_grid(grid: CapacitiveGrid):
     x_offset = grid.ywidth/2
     y_offset = grid.xwidth/2
 
+    outer_group = grid.dwg.g(id=f'electrodes')
+
     for column in range(grid.size[0]):
+        group = grid.dwg.g(id=f'column-{column}')
+
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
         ylength = grid.pitch * grid.size[1]
-        grid.dwg.add(grid.dwg.line(
+        group.add(grid.dwg.line(
             (xcenter*mm, y_offset*mm),
             (xcenter*mm, (ylength + y_offset)*mm),
             stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
@@ -65,20 +69,23 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             x_start = xcenter - (x_length/2)
             x_end   = xcenter + (x_length/2)
             y = digit * dy_xdigits + y_offset
-            grid.dwg.add(grid.dwg.line(
+            group.add(grid.dwg.line(
                 (x_start*mm, y*mm),
                 (x_end*mm, y*mm),
                 stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
                 stroke_width=grid.xwidth*mm,
                 stroke_linecap='round'
             ))
+        outer_group.add(group)
 
     for row in range(grid.size[1]):
+        group = grid.dwg.g(id=f'row-{row}')
+
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
         for column in range(grid.size[0] + 1):
             xcenter = column*grid.pitch + x_offset
-            grid.dwg.add(grid.dwg.line(
+            group.add(grid.dwg.line(
                 (xcenter*mm, y_start*mm),
                 (xcenter*mm, (y_start+ylength)*mm),
                 stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
@@ -97,13 +104,15 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 elif column == grid.size[0]:
                     digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2)
                     digit_x_start = xcenter
-                grid.dwg.add(grid.dwg.line(
+                group.add(grid.dwg.line(
                     (digit_x_start*mm, digit_y*mm),
                     ((digit_x_start + digit_length)*mm, digit_y*mm),
                     stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
                     stroke_width=grid.ywidth*mm,
                     stroke_linecap='round'
                 ))
+        outer_group.add(group)
+    grid.dwg.add(outer_group)
 
 def create_diamond_grid(grid: CapacitiveGrid):
     # TODO
