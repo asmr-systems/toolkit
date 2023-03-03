@@ -3,6 +3,9 @@ from enum import Enum
 import svgwrite
 from svgwrite import mm
 
+import asmr.kicad
+from .shapes import Line
+
 
 class GridPattern(Enum):
     Interleaved = 'interleaved'
@@ -18,7 +21,9 @@ class CapacitiveGrid:
                  ywidth=0.5,       # width of y electrode traces
                  separation=0.5,   # min separation between electrodes
                  use_color=False): # display different color electrodes
-        self.filename = filename
+        isExtensionless = len(filename.split('.')) < 2 # TODO or check valid extensions
+        self.fmt = 'svg' if isExtensionless else filename.split('.')[-1]
+        self.filename = f'{filename}.{fmt}' if isExtensionless else filename
         self.size = size
         self.pitch = pitch
         self.xwidth = xwidth
@@ -28,10 +33,15 @@ class CapacitiveGrid:
         self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
 
     def save(self):
-        self.dwg.save()
+        if (self.fmt == 'svg'):
+            self.dwg.save()
 
 
 def create_interleaved_grid(grid: CapacitiveGrid):
+    if (grid.fmt == 'kicad_mod'):
+        asmr.kicad.render_footprint(grid.filename)
+        return
+
     # calculate space between x-y electrodes from target separation
     ydigits_per_node = 0
     remaining_space = grid.pitch - grid.xwidth

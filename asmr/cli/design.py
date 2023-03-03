@@ -27,7 +27,7 @@ def main():
 @click.option('--xwidth', default=0.5, help="width of x electrode traces (mm)", type=float)
 @click.option('--ywidth', default=0.5, help="width of y electrode traces (mm)", type=float)
 @click.option('-s', '--separation', default=0.3, help="separation of traces", type=float)
-@click.option('-f', '--filename', required=True, help="output file (.svg)")
+@click.option('-f', '--filename', required=True, help="output file (.svg|.kicad_mod)")
 @click.option('--color', is_flag=True, default=False, help="color-codes electrodes for easier inspection")
 def touch_grid(filename, pattern, xsize, ysize, pitch, xwidth, ywidth, separation, color):
     """ generate capacitive touch design. """
