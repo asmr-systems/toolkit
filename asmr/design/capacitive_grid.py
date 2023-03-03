@@ -4,7 +4,7 @@ import svgwrite
 from svgwrite import mm
 
 import asmr.kicad
-from .shapes import Line
+from .gfx import Line
 
 
 class GridPattern(Enum):
@@ -30,18 +30,31 @@ class CapacitiveGrid:
         self.ywidth = ywidth
         self.separation = separation
         self.use_color = use_color
+        self.gfx = []
         self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
 
     def save(self):
         if (self.fmt == 'svg'):
-            self.dwg.save()
+            self.save_svg()
+        elif self.fmt == "kicad_mod":
+            self.save_kicad_footprint()
+
+    def save_svg(self):
+        dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
+        groups = {}
+        for shape in self.gfx:
+            if shape.group not in groups and shape.group != None:
+                groups[shape.group] = dwg.g(id=shape.group)
+                dwg.add(groups[shape.group])
+            group = shape.group if shape.group == None else groups[shape.group]
+            shape.to_svg(dwg, group=group)
+        dwg.save()
+
+    def save_kicad_footprint(self):
+        asmr.kicad.render_footprint(grid.filename)
 
 
 def create_interleaved_grid(grid: CapacitiveGrid):
-    if (grid.fmt == 'kicad_mod'):
-        asmr.kicad.render_footprint(grid.filename)
-        return
-
     # calculate space between x-y electrodes from target separation
     ydigits_per_node = 0
     remaining_space = grid.pitch - grid.xwidth
@@ -57,19 +70,20 @@ def create_interleaved_grid(grid: CapacitiveGrid):
     x_offset = grid.ywidth/2
     y_offset = grid.xwidth/2
 
-    outer_group = grid.dwg.g(id=f'electrodes')
-
     for column in range(grid.size[0]):
-        group = grid.dwg.g(id=f'column-{column}')
+        group = f'column-{column}'
 
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
         ylength = grid.pitch * grid.size[1]
-        group.add(grid.dwg.line(
-            (xcenter*mm, y_offset*mm),
-            (xcenter*mm, (ylength + y_offset)*mm),
-            stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
-            stroke_width=grid.xwidth*mm
+        grid.gfx.append(Line(
+            xcenter,
+            y_offset,
+            xcenter,
+            ylength + y_offset,
+            width=grid.xwidth,
+            color='#0000FF' if grid.use_color else '#000000',
+            group=group,
         ))
 
         # the minimum columnar digits (surrounding each node)
@@ -79,27 +93,32 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             x_start = xcenter - (x_length/2)
             x_end   = xcenter + (x_length/2)
             y = digit * dy_xdigits + y_offset
-            group.add(grid.dwg.line(
-                (x_start*mm, y*mm),
-                (x_end*mm, y*mm),
-                stroke=svgwrite.rgb(0,0,255 if grid.use_color else 0),
-                stroke_width=grid.xwidth*mm,
-                stroke_linecap='round'
+            grid.gfx.append(Line(
+                x_start,
+                y,
+                x_end,
+                y,
+                width=grid.xwidth,
+                color='#0000FF' if grid.use_color else '#000000',
+                linecap='round',
+                group=group,
             ))
-        outer_group.add(group)
 
     for row in range(grid.size[1]):
-        group = grid.dwg.g(id=f'row-{row}')
+        group = f'row-{row}'
 
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
         for column in range(grid.size[0] + 1):
             xcenter = column*grid.pitch + x_offset
-            group.add(grid.dwg.line(
-                (xcenter*mm, y_start*mm),
-                (xcenter*mm, (y_start+ylength)*mm),
-                stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
-                stroke_width=grid.ywidth*mm
+            grid.gfx.append(Line(
+                xcenter,
+                y_start,
+                xcenter,
+                y_start+ylength,
+                width=grid.ywidth,
+                color='#FF0000' if grid.use_color else '#000000',
+                group=group,
             ))
             for digit in range(ydigits_per_node):
                 digit_y = y_start + digit*(grid.xwidth + 2*grid.separation + grid.ywidth)
@@ -114,15 +133,17 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 elif column == grid.size[0]:
                     digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2)
                     digit_x_start = xcenter
-                group.add(grid.dwg.line(
-                    (digit_x_start*mm, digit_y*mm),
-                    ((digit_x_start + digit_length)*mm, digit_y*mm),
-                    stroke=svgwrite.rgb(255 if grid.use_color else 0,0,0),
-                    stroke_width=grid.ywidth*mm,
-                    stroke_linecap='round'
+
+                grid.gfx.append(Line(
+                    digit_x_start,
+                    digit_y,
+                    digit_x_start + digit_length,
+                    digit_y,
+                    width=grid.ywidth,
+                    color='#FF0000' if grid.use_color else '#000000',
+                    linecap='round',
+                    group=group,
                 ))
-        outer_group.add(group)
-    grid.dwg.add(outer_group)
 
 def create_diamond_grid(grid: CapacitiveGrid):
     # TODO
