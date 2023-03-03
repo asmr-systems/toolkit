@@ -27,16 +27,31 @@ class Line:
         self.linecap = linecap
         self.group = group
 
-    def to_svg(self,
-               dwg,
-               group=None):
-        if group == None:
-            group = dwg
 
-        group.add(dwg.line(
-            (self.x0*mm, self.y0*mm),
-            (self.x1*mm, self.y1*mm),
-            stroke=self.color,
-            stroke_width=self.width*mm,
-            stroke_linecap=self.linecap
-        ))
+class SVG:
+    def __init__(self, filename, shapes=[]):
+        self.filename = filename
+        self.groups = {}
+        self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
+        if len(shapes) > 0:
+            self.from_shapes(shapes)
+
+    def from_shapes(self, shapes):
+        for shape in shapes:
+            if shape.group not in self.groups and shape.group != None:
+                self.groups[shape.group] = self.dwg.g(id=shape.group)
+                self.dwg.add(self.groups[shape.group])
+
+            group = self.dwg if shape.group == None else self.groups[shape.group]
+
+            if shape.__class__ is Line:
+                group.add(self.dwg.line(
+                    (shape.x0*mm, shape.y0*mm),
+                    (shape.x1*mm, shape.y1*mm),
+                    stroke=shape.color,
+                    stroke_width=shape.width*mm,
+                    stroke_linecap=shape.linecap
+                ))
+
+    def save(self):
+        self.dwg.save()

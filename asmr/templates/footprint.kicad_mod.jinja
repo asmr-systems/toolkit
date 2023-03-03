@@ -1,3 +1,18 @@
-(footprint {{ footprint_name }} (version {{ date_created }}) (generator {{ generating_program}})
+(footprint "{{ footprint_name }}" (version 20211014) (generator {{ generating_program }})
+  (descr "{{ description }}")
+  (layer "{{ canonical_layer }}")
+  (tedit {{ date_created }})
+  (descr "{{ description }}")
+  (attr {{ fp_type }})
 
+  {%- for pad in pads %}
+  (pad "{{ pad.id }}" {{ pad.type }} {{ pad.shape }} (at {{ pad.x }} {{ pad.y }}) (size 0.01 0.01) (layers "{{ canonical_layer }}")
+    (primitives
+      {%- for line in pad.lines %}
+      (gr_line (start {{ line.x0 }} {{ line.y0 }}) (end {{ line.x1 }} {{ line.y1 }}) (layer "{{ canonical_layer }}") (width {{ line.width }}) (tstamp {{ line.uuid }}))
+      {%- endfor %}
+    )
+    (tstamp {{ pad.uuid }})
+  )
+  {%- endfor %}
 )

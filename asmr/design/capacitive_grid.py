@@ -4,7 +4,7 @@ import svgwrite
 from svgwrite import mm
 
 import asmr.kicad
-from .gfx import Line
+from .gfx import Line, SVG
 
 
 class GridPattern(Enum):
@@ -30,8 +30,14 @@ class CapacitiveGrid:
         self.ywidth = ywidth
         self.separation = separation
         self.use_color = use_color
-        self.gfx = []
-        self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
+        self.gfx = [] # TODO break this out into electrodes, silkscreens, masks
+
+        self.colors = {
+            'x': '#ed53ba',
+            'y': '#2b78fc',
+            'silkscreen' : '#FF000027',
+            'mask': '#00FF0027',
+        }
 
     def save(self):
         if (self.fmt == 'svg'):
@@ -40,18 +46,13 @@ class CapacitiveGrid:
             self.save_kicad_footprint()
 
     def save_svg(self):
-        dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
-        groups = {}
-        for shape in self.gfx:
-            if shape.group not in groups and shape.group != None:
-                groups[shape.group] = dwg.g(id=shape.group)
-                dwg.add(groups[shape.group])
-            group = shape.group if shape.group == None else groups[shape.group]
-            shape.to_svg(dwg, group=group)
-        dwg.save()
+        svg = SVG(self.filename, self.gfx)
+        svg.save()
 
     def save_kicad_footprint(self):
-        asmr.kicad.render_footprint(grid.filename)
+        footprint = asmr.kicad.Footprint(self.filename)
+        footprint.pads_from_shapes(self.gfx)
+        footprint.save()
 
 
 def create_interleaved_grid(grid: CapacitiveGrid):
@@ -71,7 +72,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
     y_offset = grid.xwidth/2
 
     for column in range(grid.size[0]):
-        group = f'column-{column}'
+        group = f'pad={column}'
 
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
@@ -82,7 +83,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             xcenter,
             ylength + y_offset,
             width=grid.xwidth,
-            color='#0000FF' if grid.use_color else '#000000',
+            color=grid.colors['x'] if grid.use_color else '#000000',
             group=group,
         ))
 
@@ -99,13 +100,13 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 x_end,
                 y,
                 width=grid.xwidth,
-                color='#0000FF' if grid.use_color else '#000000',
+                color=grid.colors['x'] if grid.use_color else '#000000',
                 linecap='round',
                 group=group,
             ))
 
     for row in range(grid.size[1]):
-        group = f'row-{row}'
+        group = f'pad={grid.size[0] + row}'
 
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
@@ -117,7 +118,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                 xcenter,
                 y_start+ylength,
                 width=grid.ywidth,
-                color='#FF0000' if grid.use_color else '#000000',
+                color=grid.colors['y'] if grid.use_color else '#000000',
                 group=group,
             ))
             for digit in range(ydigits_per_node):
@@ -140,7 +141,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                     digit_x_start + digit_length,
                     digit_y,
                     width=grid.ywidth,
-                    color='#FF0000' if grid.use_color else '#000000',
+                    color=grid.colors['y'] if grid.use_color else '#000000',
                     linecap='round',
                     group=group,
                 ))
