@@ -30,7 +30,9 @@ class CapacitiveGrid:
         self.ywidth = ywidth
         self.separation = separation
         self.use_color = use_color
-        self.gfx = [] # TODO break this out into electrodes, silkscreens, masks
+        self.electrodes = [] # TODO break this out into electrodes, silkscreens, masks
+        self.inverted_solder_masks = []
+        self.silkscreens = []
 
         self.colors = {
             'x': '#ed53ba',
@@ -46,12 +48,19 @@ class CapacitiveGrid:
             self.save_kicad_footprint()
 
     def save_svg(self):
-        svg = SVG(self.filename, self.gfx)
+        svg = SVG(
+            self.filename,
+            [
+                *self.electrodes,
+                *self.inverted_solder_masks,
+                *self.silkscreens,
+            ])
         svg.save()
 
     def save_kicad_footprint(self):
         footprint = asmr.kicad.Footprint(self.filename)
-        footprint.pads_from_shapes(self.gfx)
+        footprint.pads_from_shapes(self.electrodes)
+        # TODO add support for masks and silks
         footprint.save()
 
 
@@ -77,7 +86,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
         ylength = grid.pitch * grid.size[1]
-        grid.gfx.append(Line(
+        grid.electrodes.append(Line(
             xcenter,
             y_offset,
             xcenter,
@@ -94,7 +103,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
             x_start = xcenter - (x_length/2)
             x_end   = xcenter + (x_length/2)
             y = digit * dy_xdigits + y_offset
-            grid.gfx.append(Line(
+            grid.electrodes.append(Line(
                 x_start,
                 y,
                 x_end,
@@ -112,7 +121,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
         for column in range(grid.size[0] + 1):
             xcenter = column*grid.pitch + x_offset
-            grid.gfx.append(Line(
+            grid.electrodes.append(Line(
                 xcenter,
                 y_start,
                 xcenter,
@@ -135,7 +144,7 @@ def create_interleaved_grid(grid: CapacitiveGrid):
                     digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2)
                     digit_x_start = xcenter
 
-                grid.gfx.append(Line(
+                grid.electrodes.append(Line(
                     digit_x_start,
                     digit_y,
                     digit_x_start + digit_length,
@@ -150,6 +159,9 @@ def create_diamond_grid(grid: CapacitiveGrid):
     # TODO
     print(grid.xwidth)
 
+def generate_mask_patterns(grid):
+    # TODO implement this
+    pass
 
 class CapacitiveGridGenerator:
     def __init__(self,
