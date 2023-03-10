@@ -15,4 +15,21 @@
     (tstamp {{ pad.uuid }})
   )
   {%- endfor %}
+
+  {%- for line in silkscreen['lines'] %}
+  (fp_line (start {{ line.x0 }} {{ line.y0 }}) (end {{ line.x1 }} {{ line.y1 }}) (layer "F.SilkS") (width {{ line.width }})
+    (tstamp {{ line.uuid }})
+  )
+  {%- endfor %}
+
+  {%- for rect in mask['rects'] %}
+  (fp_rect
+    (start {{ rect.x0 }} {{ rect.y0 }})
+    (end {{ rect.x1 }} {{ rect.y1 }})
+    (layer {{ rect.layer }})
+    (width {{ rect.width }})
+    (fill solid)
+    (tstamp {{ rect.uuid }})
+    )
+  {%- endfor %}
 )

@@ -45,6 +45,33 @@ class Line:
             layer=layer,
         )
 
+class Rectangle:
+    def __init__(self,
+                 x0,
+                 y0,
+                 x1,
+                 y1,
+                 width=0,
+                 layer="F.SilkS"):
+        self.uuid = uuid.uuid4()
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+        self.width = width
+        self.layer = layer
+
+    @staticmethod
+    def from_gfx_line(line, layer="F.SilkS", offset=(0, 0)):
+        return Rectangle(
+            line.x0 - offset[0],
+            line.y0 - offset[1],
+            line.x1 - offset[0],
+            line.y1 - offset[1],
+            # line.width,
+            layer=layer,
+        )
+
 class FpPad:
     def __init__(self, id):
         self.id = id
@@ -70,8 +97,8 @@ class Footprint:
                  silkscreen=[]):
         self.filename = filename
         self.pads = {}
-        self.masks = {}
-        self.silkscreens = {}
+        self.mask = {'rects': []}
+        self.silkscreen = {'lines': []}
         if len(pads) > 0:
             self.pads_from_shapes(pads)
         if len(mask) > 0:
@@ -94,12 +121,14 @@ class Footprint:
 
 
     def mask_from_shapes(self, shapes):
-        # TODO implement me
-        pass
+        for shape in shapes:
+            if shape.__class__ == asmr.design.gfx.Rectangle:
+                self.mask['rects'].append(Rectangle.from_gfx_line(shape, layer="F.Mask"))
 
     def silkscreen_from_shapes(self, shapes):
-        # TODO implement me
-        pass
+        for shape in shapes:
+            if shape.__class__ == asmr.design.gfx.Line:
+                self.silkscreen['lines'].append(Line.from_gfx_line(shape, layer="F.SilkS"))
 
     def save(self):
         name = '.'.join(self.filename.split('.')[:-1])
@@ -112,5 +141,7 @@ class Footprint:
             'canonical_layer': 'F.Cu',
             'fp_type': 'smd',
             'pads': self.pads.values(),
+            'silkscreen': self.silkscreen,
+            'mask': self.mask,
         }
         render_template(self.filename, FOOTPRINT_TEMPLATE, ctx)
