@@ -20,7 +20,7 @@ class CapacitiveGrid:
                  xwidth=0.5,       # width of x electrode traces
                  ywidth=0.5,       # width of y electrode traces
                  separation=0.5,   # min separation between electrodes
-                 margin=3,         # margin around sensor perimeter
+                 margin=0,         # margin around sensor perimeter
                  use_color=False): # display different color electrodes
         isExtensionless = len(filename.split('.')) < 2 # TODO or check valid extensions
         self.fmt = 'svg' if isExtensionless else filename.split('.')[-1]
@@ -266,19 +266,44 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
                 ))
 
 def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
-    for column in range(grid.size[0]):
+    # Y electrodes
+    for column in range(grid.size[0] + 1):
         for row in range(grid.size[1]):
+            cutoff = 'none'
+            if column == 0:
+                cutoff = 'left'
+            elif column == grid.size[0]:
+                cutoff = 'right'
             grid.layers[layer].append(Diamond(
-                grid.pitch*column + grid.margin + grid.pitch/2,
-                grid.pitch*row + grid.margin + grid.pitch/2,
+                grid.pitch*column + grid.margin,
+                grid.pitch*row + grid.margin ,
                 grid.pitch,
-                color=grid.colors['y'] if grid.use_color else '#000000',
+                color=grid.colors['x'] if grid.use_color else '#000000',
                 fill = 0.3,
                 stroke_width = grid.xwidth,
                 group=layer,
                 pattern='hatched',
-                cutoff = 'left',
+                cutoff = cutoff,
             ))
+    # X electrodes
+    # for column in range(grid.size[0]):
+    #     for row in range(grid.size[1] + 1):
+    #         cutoff = 'none'
+    #         if row == 0:
+    #             cutoff = 'top'
+    #         elif row == grid.size[1]:
+    #             cutoff = 'bottom'
+    #         grid.layers[layer].append(Diamond(
+    #             grid.pitch*column + grid.margin + grid.pitch/2,
+    #             grid.pitch*row + grid.margin - grid.pitch/2,
+    #             grid.pitch,
+    #             color=grid.colors['y'] if grid.use_color else '#000000',
+    #             fill = 0.3,
+    #             stroke_width = grid.xwidth,
+    #             group=layer,
+    #             pattern='hatched',
+    #             cutoff = cutoff,
+    #         ))
 
 class CapacitiveGridGenerator:
     def __init__(self,

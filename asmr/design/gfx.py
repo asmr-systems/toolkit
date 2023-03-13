@@ -66,14 +66,19 @@ class Diamond:
         # normalize color
         color = f'{color}FF' if len(color) == 7 else color
 
-        self.x0 = x0
-        self.y0 = y0 + stroke_width/2
-        self.diagonal = diagonal - stroke_width
-        self.x1 = self.x0 + self.diagonal/2 - stroke_width/2
+        # TODO DEBUG THIS
+        # FINDING: THE OFFSET ANGLES ARE DIFFERENT FOR
+        # TRIANGLES! NEED TO CALCULATE THE OFFSETS FOR TRIANGLES
+        # AND USE APPROPRIATELY
+        h = math.sqrt(2*(stroke_width**2))
+        self.x0 = x0 + h #math.sqrt((stroke_width/2)**2)
+        self.y0 = y0 + h #math.sqrt((stroke_width/2)**2) #stroke_width
+        self.diagonal = diagonal - 2*h# 2*math.sqrt((stroke_width/2)**2) #- stroke_width
+        self.x1 = self.x0 + self.diagonal/2 #-  math.sqrt((stroke_width**2)/2)
         self.y1 = self.y0 + self.diagonal/2
         self.x2 = self.x0
-        self.y2 = self.y0 + self.diagonal - stroke_width/2
-        self.x3 = self.x0 - self.diagonal/2 + stroke_width/2
+        self.y2 = self.y0 + self.diagonal #- stroke_width/2
+        self.x3 = self.x0 - self.diagonal/2 # + stroke_width/2
         self.y3 = self.y0 + self.diagonal/2
         self.color = color if fill == 1 else f'{color[:-2]}00'
         self.fill = fill
@@ -144,7 +149,7 @@ class Diamond:
                     xend_coef*i*delta + xend,
                     yend_coef*i*delta + yend,
                     width=self.stroke_width,
-                    color=f'{self.color[:-2]}FF',
+                    color='#00FF00FF', #f'{self.color[:-2]}FF',
                     group=self.group
                 ))
         if self.pattern == 'hatched' or self.pattern == 'left':
@@ -191,7 +196,7 @@ class SVG:
     def __init__(self, filename, shapes=[]):
         self.filename = filename
         self.groups = {}
-        self.scale = 3.543307
+        self.scale = 3.543307 * 10
         self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
         self.scale_group = self.dwg.g(transform=f'scale({self.scale})')
         self.dwg.add(self.scale_group)
