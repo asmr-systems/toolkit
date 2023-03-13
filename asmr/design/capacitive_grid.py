@@ -4,7 +4,7 @@ import svgwrite
 from svgwrite import mm
 
 import asmr.kicad
-from .gfx import Line, Rectangle, SVG
+from .gfx import Line, Rectangle, Diamond, SVG
 
 
 class GridPattern(Enum):
@@ -42,7 +42,7 @@ class CapacitiveGrid:
             'x': '#ed53ba',
             'y': '#2b78fc',
             'silkscreen' : '#b62ed1B0',
-            'solder_mask': '#00FF00C7',
+            'solder_mask': '#86ff3b57',
         }
 
     def save(self):
@@ -265,13 +265,18 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
                     group=group,
                 ))
 
-def create_diamond_grid(grid: CapacitiveGrid):
-    # TODO
-    print(grid.xwidth)
-
-def generate_mask_patterns(grid):
-    # TODO implement this
-    pass
+def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
+    for column in range(grid.size[0]):
+        for row in range(grid.size[1]):
+            grid.layers[layer].append(Diamond(
+                grid.pitch*column + grid.margin + grid.pitch/2,
+                grid.pitch*row + grid.margin + grid.pitch/2,
+                grid.pitch,
+                color=grid.colors['y'] if grid.use_color else '#000000',
+                fill = 1,
+                stroke_width = grid.xwidth,
+                group=layer
+            ))
 
 class CapacitiveGridGenerator:
     def __init__(self,
