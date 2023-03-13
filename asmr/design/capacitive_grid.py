@@ -273,9 +273,11 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
                 grid.pitch*row + grid.margin + grid.pitch/2,
                 grid.pitch,
                 color=grid.colors['y'] if grid.use_color else '#000000',
-                fill = 1,
+                fill = 0.3,
                 stroke_width = grid.xwidth,
-                group=layer
+                group=layer,
+                pattern='hatched',
+                cutoff = 'left',
             ))
 
 class CapacitiveGridGenerator:
