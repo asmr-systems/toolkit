@@ -70,6 +70,8 @@ class Diamond:
         # FINDING: THE OFFSET ANGLES ARE DIFFERENT FOR
         # TRIANGLES! NEED TO CALCULATE THE OFFSETS FOR TRIANGLES
         # AND USE APPROPRIATELY
+        # THIS IS EXACTLY WHAT IS HAPPENING:
+        # https://css-tricks.com/tight-fitting-svg-shapes/
         h = math.sqrt(2*(stroke_width**2))
         self.x0 = x0 + h #math.sqrt((stroke_width/2)**2)
         self.y0 = y0 + h #math.sqrt((stroke_width/2)**2) #stroke_width
