@@ -60,27 +60,21 @@ class Diamond:
                  fill = 1.0, # fill between 0 and 1
                  color='#000000FF',
                  stroke_width=0,
-                 pattern='hatched',
+                 pattern='#',
                  cutoff='none',
                  group=None):
         # normalize color
         color = f'{color}FF' if len(color) == 7 else color
 
-        # TODO DEBUG THIS
-        # FINDING: THE OFFSET ANGLES ARE DIFFERENT FOR
-        # TRIANGLES! NEED TO CALCULATE THE OFFSETS FOR TRIANGLES
-        # AND USE APPROPRIATELY
-        # THIS IS EXACTLY WHAT IS HAPPENING:
-        # https://css-tricks.com/tight-fitting-svg-shapes/
-        h = math.sqrt(2*(stroke_width**2))
-        self.x0 = x0 + h #math.sqrt((stroke_width/2)**2)
-        self.y0 = y0 + h #math.sqrt((stroke_width/2)**2) #stroke_width
-        self.diagonal = diagonal - 2*h# 2*math.sqrt((stroke_width/2)**2) #- stroke_width
-        self.x1 = self.x0 + self.diagonal/2 #-  math.sqrt((stroke_width**2)/2)
+        h = stroke_width/2
+        self.x0 = x0 + h
+        self.y0 = y0 + h
+        self.diagonal = diagonal - 2*h
+        self.x1 = self.x0 + self.diagonal/2
         self.y1 = self.y0 + self.diagonal/2
         self.x2 = self.x0
-        self.y2 = self.y0 + self.diagonal #- stroke_width/2
-        self.x3 = self.x0 - self.diagonal/2 # + stroke_width/2
+        self.y2 = self.y0 + self.diagonal
+        self.x3 = self.x0 - self.diagonal/2
         self.y3 = self.y0 + self.diagonal/2
         self.color = color if fill == 1 else f'{color[:-2]}00'
         self.fill = fill
@@ -128,7 +122,7 @@ class Diamond:
         ystart_coef = 1
         yend_coef = 1
 
-        if self.pattern == 'hatched' or self.pattern == 'right':
+        if self.pattern == '#' or self.pattern == '/':
             if self.cutoff == 'top':
                 xstart = self.x3
                 ystart = self.y3
@@ -151,10 +145,10 @@ class Diamond:
                     xend_coef*i*delta + xend,
                     yend_coef*i*delta + yend,
                     width=self.stroke_width,
-                    color='#00FF00FF', #f'{self.color[:-2]}FF',
+                    color=f'{self.color[:-2]}FF',
                     group=self.group
                 ))
-        if self.pattern == 'hatched' or self.pattern == 'left':
+        if self.pattern == '#' or self.pattern == '\\':
             xstart = self.x0
             ystart = self.y0
             xend = self.x1
@@ -190,15 +184,11 @@ class Diamond:
                 ))
 
 
-
-        # TODO make fill lines
-
-
 class SVG:
     def __init__(self, filename, shapes=[]):
         self.filename = filename
         self.groups = {}
-        self.scale = 3.543307 * 10
+        self.scale = 3.543307
         self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
         self.scale_group = self.dwg.g(transform=f'scale({self.scale})')
         self.dwg.add(self.scale_group)
@@ -242,6 +232,7 @@ class SVG:
                     fill='none' if shape.fill < 1 else c[0],
                     stroke=c[0],
                     stroke_width=shape.stroke_width,
+                    stroke_linejoin='round',
                 ))
                 self.from_shapes(shape.fill_lines)
 

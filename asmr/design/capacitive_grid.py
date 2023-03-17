@@ -21,9 +21,10 @@ class CapacitiveGrid:
                  ywidth=0.5,       # width of y electrode traces
                  separation=0.5,   # min separation between electrodes
                  margin=0,         # margin around sensor perimeter
-                 use_color=False): # display different color electrodes
+                 use_color=False,  # display different color electrodes
+                 fmt='1.0|1.0'):   # format string
         isExtensionless = len(filename.split('.')) < 2 # TODO or check valid extensions
-        self.fmt = 'svg' if isExtensionless else filename.split('.')[-1]
+        self.ext = 'svg' if isExtensionless else filename.split('.')[-1]
         self.filename = f'{filename}.{fmt}' if isExtensionless else filename
         self.size = size
         self.pitch = pitch
@@ -32,6 +33,11 @@ class CapacitiveGrid:
         self.separation = separation
         self.margin = margin
         self.use_color = use_color
+        self.fmt_str = fmt
+        self.fmt = (
+            {'fill': 6.0, 'pattern': '#'},
+            {'fill': 6.0, 'pattern': '#'}
+        )
         self.layers = {
             'electrodes': [],
             'solder_mask': [],
@@ -44,11 +50,20 @@ class CapacitiveGrid:
             'silkscreen' : '#b62ed1B0',
             'solder_mask': '#86ff3b57',
         }
+        self.parse_fmt()
+
+    def parse_fmt(self):
+        row_col = self.fmt_str.split('|')
+        for i in range(len(row_col)):
+            float_pattern = row_col[i].split(',')
+            self.fmt[i]['fill'] = float(float_pattern[0])
+            if len(float_pattern) == 2:
+                self.fmt[i]['pattern'] = float_pattern[1]
 
     def save(self):
-        if (self.fmt == 'svg'):
+        if (self.ext == 'svg'):
             self.save_svg()
-        elif self.fmt == "kicad_mod":
+        elif self.ext == "kicad_mod":
             self.save_kicad_footprint()
 
     def save_svg(self):
@@ -269,41 +284,60 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # Y electrodes
     for column in range(grid.size[0] + 1):
         for row in range(grid.size[1]):
+            group = f'pad={grid.size[0] + row}'
             cutoff = 'none'
             if column == 0:
                 cutoff = 'left'
             elif column == grid.size[0]:
                 cutoff = 'right'
-            grid.layers[layer].append(Diamond(
-                grid.pitch*column + grid.margin,
-                grid.pitch*row + grid.margin ,
-                grid.pitch,
+            xpadding = grid.margin
+            ypadding = grid.margin + grid.separation + grid.xwidth/2
+            diamond = Diamond(
+                grid.pitch*column + xpadding,
+                grid.pitch*row + ypadding,
+                grid.pitch - 2*grid.separation,
                 color=grid.colors['x'] if grid.use_color else '#000000',
-                fill = 0.3,
+                fill = grid.fmt[0]['fill'],
                 stroke_width = grid.xwidth,
-                group=layer,
-                pattern='hatched',
+                group=group,
+                pattern=grid.fmt[0]['pattern'],
+                cutoff = cutoff,
+            )
+            grid.layers[layer].append(diamond)
+            if column < grid.size[0]:
+                # add horizontal connector line
+                grid.layers[layer].append(Line(
+                    diamond.x1,
+                    diamond.y1,
+                    diamond.x1 + grid.separation*2 + grid.xwidth,
+                    diamond.y1,
+                    width=grid.separation/2,
+                    color=grid.colors['x'] if grid.use_color else '#000000',
+                    linecap='round',
+                    group=group,
+                ))
+    # X electrodes
+    for column in range(grid.size[0]):
+        for row in range(grid.size[1] + 1):
+            group = f'pad={column}'
+            cutoff = 'none'
+            if row == 0:
+                cutoff = 'top'
+            elif row == grid.size[1]:
+                cutoff = 'bottom'
+            xpadding = grid.margin
+            ypadding = grid.margin + grid.separation + grid.xwidth/2
+            grid.layers[layer].append(Diamond(
+                grid.pitch*column + grid.pitch/2 + xpadding,
+                grid.pitch*row - grid.pitch/2 + ypadding,
+                grid.pitch - 2*grid.separation,
+                color=grid.colors['y'] if grid.use_color else '#000000',
+                fill = grid.fmt[1]['fill'],
+                stroke_width = grid.xwidth,
+                group=group,
+                pattern=grid.fmt[1]['pattern'],
                 cutoff = cutoff,
             ))
-    # X electrodes
-    # for column in range(grid.size[0]):
-    #     for row in range(grid.size[1] + 1):
-    #         cutoff = 'none'
-    #         if row == 0:
-    #             cutoff = 'top'
-    #         elif row == grid.size[1]:
-    #             cutoff = 'bottom'
-    #         grid.layers[layer].append(Diamond(
-    #             grid.pitch*column + grid.margin + grid.pitch/2,
-    #             grid.pitch*row + grid.margin - grid.pitch/2,
-    #             grid.pitch,
-    #             color=grid.colors['y'] if grid.use_color else '#000000',
-    #             fill = 0.3,
-    #             stroke_width = grid.xwidth,
-    #             group=layer,
-    #             pattern='hatched',
-    #             cutoff = cutoff,
-    #         ))
 
 class CapacitiveGridGenerator:
     def __init__(self,
@@ -312,13 +346,15 @@ class CapacitiveGridGenerator:
                  xwidth=0.5,
                  ywidth=0.5,
                  separation=0.5,
-                 use_color=False):
+                 use_color=False,
+                 fmt='1.0|1.0'):
         self.size = (1, 1) if size is None else size
         self.pitch = 5.0 if pitch is None else pitch
         self.xwidth = 0.5 if xwidth is None else xwidth
         self.ywidth = 0.5 if ywidth is None else ywidth
         self.separation = 0.5 if separation is None else separation
         self.use_color = False if use_color is None else use_color
+        self.fmt = '1.0|1.0' if fmt is None else fmt
 
     def create(self, pattern: GridPattern, filename: str) -> CapacitiveGrid:
         grid = CapacitiveGrid(filename,
@@ -327,7 +363,8 @@ class CapacitiveGridGenerator:
                               xwidth = self.xwidth,
                               ywidth = self.ywidth,
                               separation = self.separation,
-                              use_color = self.use_color)
+                              use_color = self.use_color,
+                              fmt=self.fmt)
         if pattern is GridPattern.Interleaved:
             create_interleaved_grid(grid)
             create_square_grid(grid)

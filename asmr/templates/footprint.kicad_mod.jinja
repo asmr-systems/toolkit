@@ -9,7 +9,27 @@
   (pad "{{ pad.id }}" {{ pad.type }} {{ pad.shape }} (at {{ pad.x }} {{ pad.y }}) (size 0.01 0.01) (layers "{{ canonical_layer }}")
     (primitives
       {%- for line in pad.lines %}
-      (gr_line (start {{ line.x0 }} {{ line.y0 }}) (end {{ line.x1 }} {{ line.y1 }}) (layer "{{ canonical_layer }}") (width {{ line.width }}) (tstamp {{ line.uuid }}))
+      (gr_line
+        (start {{ line.x0 }} {{ line.y0 }})
+        (end {{ line.x1 }} {{ line.y1 }})
+        (layer "{{ canonical_layer }}")
+        (width {{ line.width }})
+        (tstamp {{ line.uuid }})
+      )
+      {%- endfor %}
+      {%- for diamond in pad.diamonds %}
+      (gr_poly
+        (pts
+          (xy {{ diamond.x0 }} {{ diamond.y0 }})
+          (xy {{ diamond.x1 }} {{ diamond.y1 }})
+          (xy {{ diamond.x2 }} {{ diamond.y2 }})
+          (xy {{ diamond.x3 }} {{ diamond.y3 }})
+        )
+        (layer {{ diamond.layer }})
+        (width {{ diamond.width }})                                  
+        (fill {{ diamond.fill }})                                    
+        (tstamp {{ diamond.uuid }})
+      )
       {%- endfor %}
     )
     (tstamp {{ pad.uuid }})

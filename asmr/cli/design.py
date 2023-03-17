@@ -28,8 +28,9 @@ def main():
 @click.option('--ywidth', default=0.5, help="width of y electrode traces (mm)", type=float)
 @click.option('-s', '--separation', default=0.3, help="separation of traces", type=float)
 @click.option('-f', '--filename', required=True, help="output file (.svg|.kicad_mod)")
+@click.option('--fmt', default='0.6,#|0.6,#', help="row|column format string (<FILL_PERCENT>[,<PATTERN>][|][...]) PATTERN=/ \ #")
 @click.option('--color', is_flag=True, default=False, help="color-codes electrodes for easier inspection")
-def touch_grid(filename, pattern, xsize, ysize, pitch, xwidth, ywidth, separation, color):
+def touch_grid(filename, pattern, xsize, ysize, pitch, xwidth, ywidth, separation, fmt, color):
     """ generate capacitive touch design. """
     if pattern == 'interleaved':
         pattern = asmr.design.GridPattern.Interleaved
@@ -41,6 +42,7 @@ def touch_grid(filename, pattern, xsize, ysize, pitch, xwidth, ywidth, separatio
                                                xwidth=xwidth,
                                                ywidth=ywidth,
                                                separation=separation,
-                                               use_color=color)
+                                               use_color=color,
+                                               fmt=fmt)
 
     grid.create(pattern, filename)
