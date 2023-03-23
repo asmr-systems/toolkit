@@ -206,7 +206,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
     y_offset = grid.xwidth/2
 
     for column in range(grid.size[0]):
-        group = f'pad={column}'
+        group = f'pad={column+1}'
 
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
@@ -240,7 +240,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
             ))
 
     for row in range(grid.size[1]):
-        group = f'pad={grid.size[0] + row}'
+        group = f'pad={grid.size[0] + row + 1}'
 
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
@@ -284,7 +284,7 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # Y electrodes
     for column in range(grid.size[0] + 1):
         for row in range(grid.size[1]):
-            group = f'pad={grid.size[0] + row}'
+            group = f'pad={grid.size[0] + row + 1}'
             cutoff = 'none'
             if column == 0:
                 cutoff = 'left'
@@ -319,7 +319,7 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # X electrodes
     for column in range(grid.size[0]):
         for row in range(grid.size[1] + 1):
-            group = f'pad={column}'
+            group = f'pad={column + 1}'
             cutoff = 'none'
             if row == 0:
                 cutoff = 'top'
