@@ -195,7 +195,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
     remaining_space = grid.pitch - grid.xwidth
     while remaining_space > (2*ydigits_per_node*grid.separation):
         ydigits_per_node += 1
-        remaining_space = grid.pitch - ydigits_per_node*(grid.xwidth + grid.ywidth)
+        remaining_space = grid.pitch - ydigits_per_node*((grid.xwidth + grid.ywidth)/2)
     ydigits_per_node -= 1
     remaining_space = grid.pitch - ydigits_per_node*(grid.xwidth + grid.ywidth)
     grid.separation = remaining_space / (2*ydigits_per_node)
@@ -206,7 +206,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
     y_offset = grid.xwidth/2
 
     for column in range(grid.size[0]):
-        group = f'pad={column+1}'
+        group = f'pad={grid.size[1] + column+1}'
 
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
@@ -240,7 +240,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
             ))
 
     for row in range(grid.size[1]):
-        group = f'pad={grid.size[0] + row + 1}'
+        group = f'pad={row + 1}'
 
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
@@ -284,7 +284,7 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # Y electrodes
     for column in range(grid.size[0] + 1):
         for row in range(grid.size[1]):
-            group = f'pad={grid.size[0] + row + 1}'
+            group = f'pad={row + 1}'
             cutoff = 'none'
             if column == 0:
                 cutoff = 'left'
@@ -311,7 +311,7 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
                     diamond.y1,
                     diamond.x1 + grid.separation*2 + grid.xwidth,
                     diamond.y1,
-                    width=grid.separation/2,
+                    width=min(grid.separation/2, grid.xwidth),
                     color=grid.colors['x'] if grid.use_color else '#000000',
                     linecap='round',
                     group=group,
@@ -319,7 +319,7 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # X electrodes
     for column in range(grid.size[0]):
         for row in range(grid.size[1] + 1):
-            group = f'pad={column + 1}'
+            group = f'pad={grid.size[1] + column + 1}'
             cutoff = 'none'
             if row == 0:
                 cutoff = 'top'
@@ -371,4 +371,6 @@ class CapacitiveGridGenerator:
             create_inverted_square_grid(grid)
         elif pattern is GridPattern.Diamond:
             create_diamond_grid(grid)
+            create_square_grid(grid)
+            create_inverted_square_grid(grid)
         grid.save()
