@@ -15,15 +15,17 @@ class GridPattern(Enum):
 class CapacitiveGrid:
     def __init__(self,
                  filename: str,
-                 size=(1, 1),      # (X, Y)
-                 pitch=5,          # width|height of button (mm)
-                 xwidth=0.5,       # width of x electrode traces
-                 ywidth=0.5,       # width of y electrode traces
-                 separation=0.5,   # min separation between electrodes
-                 margin=0,         # margin around sensor perimeter
-                 use_color=False,  # display different color electrodes
-                 fmt='1.0|1.0'):   # format string
-        isExtensionless = len(filename.split('.')) < 2 # TODO or check valid extensions
+                 size=(1, 1),          # (X, Y)
+                 pitch=5,              # width|height of button (mm)
+                 xwidth=0.5,           # width of x electrode traces
+                 ywidth=0.5,           # width of y electrode traces
+                 separation=0.5,       # min separation between electrodes
+                 margin=0,             # margin around sensor perimeter
+                 use_color=False,      # display different color electrodes
+                 n_columns_per_pad=1 , # each column pad is 2 columns
+                 n_rows_per_pad=1,     # each row pad is 2 rows
+                 fmt='1.0|1.0'):       # format string
+        isExtensionless = len(filename.split('.')) < 2 # TODO check valid extensions
         self.ext = 'svg' if isExtensionless else filename.split('.')[-1]
         self.filename = f'{filename}.{fmt}' if isExtensionless else filename
         self.size = size
@@ -33,6 +35,8 @@ class CapacitiveGrid:
         self.separation = separation
         self.margin = margin
         self.use_color = use_color
+        self.n_columns_per_pad = n_columns_per_pad
+        self.n_rows_per_pad = n_rows_per_pad
         self.fmt_str = fmt
         self.fmt = (
             {'fill': 6.0, 'pattern': '#'},
@@ -206,7 +210,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
     y_offset = grid.xwidth/2
 
     for column in range(grid.size[0]):
-        group = f'pad={grid.size[1] + column+1}'
+        group = f'pad={int(grid.size[1]/grid.n_rows_per_pad) + int((column-(column%grid.n_columns_per_pad))/grid.n_columns_per_pad)+1}'
 
         # create X columns
         xcenter = column*grid.pitch + grid.pitch/2 + x_offset
@@ -240,7 +244,7 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
             ))
 
     for row in range(grid.size[1]):
-        group = f'pad={row + 1}'
+        group = f'pad={int((row-(row%grid.n_rows_per_pad))/grid.n_rows_per_pad) + 1}'
 
         y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
         ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
@@ -284,7 +288,8 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # Y electrodes
     for column in range(grid.size[0] + 1):
         for row in range(grid.size[1]):
-            group = f'pad={row + 1}'
+            #group = f'pad={row + 1}'
+            group = f'pad={int((row-(row%grid.n_rows_per_pad))/grid.n_rows_per_pad) + 1}'
             cutoff = 'none'
             if column == 0:
                 cutoff = 'left'
@@ -319,7 +324,9 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # X electrodes
     for column in range(grid.size[0]):
         for row in range(grid.size[1] + 1):
-            group = f'pad={grid.size[1] + column + 1}'
+            #group = f'pad={grid.size[1] + column + 1}'
+            group = f'pad={int(grid.size[1]/grid.n_rows_per_pad) + int((column-(column%grid.n_columns_per_pad))/grid.n_columns_per_pad)+1}'
+
             cutoff = 'none'
             if row == 0:
                 cutoff = 'top'
@@ -346,6 +353,7 @@ class CapacitiveGridGenerator:
                  xwidth=0.5,
                  ywidth=0.5,
                  separation=0.5,
+                 resolution=(1, 1),
                  use_color=False,
                  fmt='1.0|1.0'):
         self.size = (1, 1) if size is None else size
@@ -353,6 +361,7 @@ class CapacitiveGridGenerator:
         self.xwidth = 0.5 if xwidth is None else xwidth
         self.ywidth = 0.5 if ywidth is None else ywidth
         self.separation = 0.5 if separation is None else separation
+        self.resolution = (1, 1) if resolution is None else resolution
         self.use_color = False if use_color is None else use_color
         self.fmt = '1.0|1.0' if fmt is None else fmt
 
@@ -363,6 +372,8 @@ class CapacitiveGridGenerator:
                               xwidth = self.xwidth,
                               ywidth = self.ywidth,
                               separation = self.separation,
+                              n_columns_per_pad=self.resolution[0],
+                              n_rows_per_pad=self.resolution[1],
                               use_color = self.use_color,
                               fmt=self.fmt)
         if pattern is GridPattern.Interleaved:
