@@ -20,7 +20,8 @@ class CapacitiveGrid:
                  xwidth=0.5,           # width of x electrode traces
                  ywidth=0.5,           # width of y electrode traces
                  separation=0.5,       # min separation between electrodes
-                 margin=0,             # margin around sensor perimeter
+                 margin=0,             # margin around entire sensor perimeter
+                 padding=0,            # padding within each sensor node
                  use_color=False,      # display different color electrodes
                  n_columns_per_pad=1 , # each column pad is 2 columns
                  n_rows_per_pad=1,     # each row pad is 2 rows
@@ -34,6 +35,7 @@ class CapacitiveGrid:
         self.ywidth = ywidth
         self.separation = separation
         self.margin = margin
+        self.padding = padding
         self.use_color = use_color
         self.n_columns_per_pad = n_columns_per_pad
         self.n_rows_per_pad = n_rows_per_pad
@@ -196,14 +198,15 @@ def create_square_grid(grid: CapacitiveGrid, layer='silkscreen'):
 def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
     # calculate space between x-y electrodes from target separation
     ydigits_per_node = 0
-    remaining_space = grid.pitch - grid.xwidth
+    remaining_space = grid.pitch - grid.xwidth - 2*grid.padding
     while remaining_space > (2*ydigits_per_node*grid.separation):
         ydigits_per_node += 1
-        remaining_space = grid.pitch - ydigits_per_node*((grid.xwidth + grid.ywidth)/2)
+        remaining_space = (grid.pitch - 2*grid.padding) - ydigits_per_node*((grid.xwidth + grid.ywidth)/2)
     ydigits_per_node -= 1
-    remaining_space = grid.pitch - ydigits_per_node*(grid.xwidth + grid.ywidth)
+    remaining_space = (grid.pitch - 2*grid.padding) - ydigits_per_node*(grid.xwidth + grid.ywidth)
     grid.separation = remaining_space / (2*ydigits_per_node)
-    n_xdigits = (ydigits_per_node * grid.size[1]) + 1
+    # n_xdigits = (ydigits_per_node * grid.size[1]) + 1
+    xdigits_per_node = ydigits_per_node + 1
     dy_xdigits = grid.separation*2 + grid.ywidth + grid.xwidth
 
     x_offset = grid.ywidth/2
@@ -225,31 +228,37 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
             group=group,
         ))
 
-        # the minimum columnar digits (surrounding each node)
-        min_x_digits = grid.size[1] + 1
-        x_length = grid.pitch - grid.ywidth - (2*grid.separation) - grid.xwidth
-        for digit in range(n_xdigits):
-            x_start = xcenter - (x_length/2)
-            x_end   = xcenter + (x_length/2)
-            y = digit * dy_xdigits + y_offset
-            grid.layers[layer].append(Line(
-                x_start + grid.margin,
-                y + grid.margin,
-                x_end + grid.margin,
-                y + grid.margin,
-                width=grid.xwidth,
-                color=grid.colors['x'] if grid.use_color else '#000000',
-                linecap='round',
-                group=group,
-            ))
+        # iterate over columnar buttons
+        for node in range(grid.size[1]):
+            # the minimum columnar digits (surrounding each node)
+            min_x_digits = grid.size[1] + 1
+            node_y_offset = node * grid.pitch + grid.padding
+            x_length = (grid.pitch - 2*grid.padding) - grid.ywidth - (2*grid.separation) - grid.xwidth
+            for digit in range(xdigits_per_node):
+                x_start = xcenter - (x_length/2)
+                x_end   = xcenter + (x_length/2)
+                y = node_y_offset + digit * dy_xdigits + y_offset
+                grid.layers[layer].append(Line(
+                    x_start + grid.margin,
+                    y + grid.margin,
+                    x_end + grid.margin,
+                    y + grid.margin,
+                    width=grid.xwidth,
+                    color=grid.colors['x'] if grid.use_color else '#000000',
+                    linecap='round',
+                    group=group,
+                ))
 
+    # create row electrode patterns
     for row in range(grid.size[1]):
         group = f'pad={int((row-(row%grid.n_rows_per_pad))/grid.n_rows_per_pad) + 1}'
 
-        y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset
-        ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2
-        for column in range(grid.size[0] + 1):
-            xcenter = column*grid.pitch + x_offset
+        y_start = row*grid.pitch + grid.xwidth + grid.separation + y_offset + grid.padding
+        ylength = grid.pitch - grid.xwidth - grid.ywidth - grid.separation*2 - 2*grid.padding
+        for column in range(grid.size[0]):
+            xcenter = column*grid.pitch + x_offset + grid.padding
+
+            # column line
             grid.layers[layer].append(Line(
                 xcenter + grid.margin,
                 y_start + grid.margin,
@@ -259,30 +268,58 @@ def create_interleaved_grid(grid: CapacitiveGrid, layer='electrodes'):
                 color=grid.colors['y'] if grid.use_color else '#000000',
                 group=group,
             ))
+            button_width = grid.pitch - 2*grid.padding
+            grid.layers[layer].append(Line(
+                xcenter + grid.margin + button_width,
+                y_start + grid.margin,
+                xcenter + grid.margin + button_width,
+                y_start+ylength + grid.margin,
+                width=grid.ywidth,
+                color=grid.colors['y'] if grid.use_color else '#000000',
+                group=group,
+            ))
+
+
+            # fingers
             for digit in range(ydigits_per_node):
                 digit_y = y_start + digit*(grid.xwidth + 2*grid.separation + grid.ywidth)
                 digit_length = None
                 digit_x_start = None
-                if column > 0 and column < (grid.size[0]):
-                    digit_length = grid.pitch - grid.separation*2 - grid.xwidth - grid.ywidth
-                    digit_x_start = xcenter - digit_length/2
-                elif column == 0:
-                    digit_x_start = xcenter
-                    digit_length  = grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2
-                elif column == grid.size[0]:
-                    digit_length  = -(grid.pitch/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2)
-                    digit_x_start = xcenter
+                for side in range(2):
+                    if side == 0:
+                        # when side = 0, its the left side of the electrode
+                        digit_x_start = xcenter
+                        digit_length  = (grid.pitch + 2*grid.padding)/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2 - 2*grid.padding
+                    elif side == 1:
+                        # when side = 1, its the right hand side of the electrode
+                        digit_x_start = xcenter + button_width
+                        digit_length  = -((grid.pitch + 2*grid.padding)/2 - grid.xwidth/2 - grid.separation - grid.ywidth/2 - 2*grid.padding)
 
+                    grid.layers[layer].append(Line(
+                        digit_x_start + grid.margin,
+                        digit_y + grid.margin,
+                        digit_x_start + digit_length + grid.margin,
+                        digit_y + grid.margin,
+                        width=grid.ywidth,
+                        color=grid.colors['y'] if grid.use_color else '#000000', #'#00FF00' if side == 0 else '#FFFF00',
+                        linecap='round',
+                        group=group,
+                    ))
+
+            # this button column is not on the end: draw a line connecting to the next electrode in the row
+            if column < (grid.size[0] - 1):
                 grid.layers[layer].append(Line(
-                    digit_x_start + grid.margin,
-                    digit_y + grid.margin,
-                    digit_x_start + digit_length + grid.margin,
-                    digit_y + grid.margin,
+                    xcenter + grid.margin + button_width,
+                    y_start + grid.margin + ylength/2,
+                    (column+1)*grid.pitch + x_offset + grid.padding,
+                    y_start + grid.margin + ylength/2,
                     width=grid.ywidth,
-                    color=grid.colors['y'] if grid.use_color else '#000000',
+                    color=grid.colors['y'] if grid.use_color else '#000000', #'#00FF00' if side == 0 else '#FFFF00',
                     linecap='round',
                     group=group,
                 ))
+
+
 
 def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
     # Y electrodes
@@ -353,6 +390,7 @@ class CapacitiveGridGenerator:
                  xwidth=0.5,
                  ywidth=0.5,
                  separation=0.5,
+                 padding=0,
                  resolution=(1, 1),
                  use_color=False,
                  fmt='1.0|1.0'):
@@ -361,6 +399,7 @@ class CapacitiveGridGenerator:
         self.xwidth = 0.5 if xwidth is None else xwidth
         self.ywidth = 0.5 if ywidth is None else ywidth
         self.separation = 0.5 if separation is None else separation
+        self.padding = 0 if padding is None else padding
         self.resolution = (1, 1) if resolution is None else resolution
         self.use_color = False if use_color is None else use_color
         self.fmt = '1.0|1.0' if fmt is None else fmt
@@ -372,6 +411,7 @@ class CapacitiveGridGenerator:
                               xwidth = self.xwidth,
                               ywidth = self.ywidth,
                               separation = self.separation,
+                              padding = self.padding,
                               n_columns_per_pad=self.resolution[0],
                               n_rows_per_pad=self.resolution[1],
                               use_color = self.use_color,
