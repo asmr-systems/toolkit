@@ -29,6 +29,7 @@ def main():
 @click.option('-s', '--separation', default=0.3, help="separation of traces", type=float)
 @click.option('--padding', default=0.0, help="padding of sensor nodes", type=float)
 @click.option('-r', '--resolution', default=(1, 1), help="scale of rows/columns", type=(int, int))
+@click.option('--silk_scaling', default=(1, 1), help="scale of silkscreen rows/columns", type=(int, int))
 @click.option('-f', '--filename', required=True, help="output file (.svg|.kicad_mod)")
 @click.option('--fmt', default='0.6,#|0.6,#', help="row|column format string (<FILL_PERCENT>[,<PATTERN>][|][...]) PATTERN=/ \ #")
 @click.option('--color', is_flag=True, default=False, help="color-codes electrodes for easier inspection")
@@ -42,6 +43,7 @@ def touch_grid(filename,
                separation,
                padding,
                resolution,
+               silk_scaling,
                fmt,
                color):
     """ generate capacitive touch design. """
@@ -57,6 +59,7 @@ def touch_grid(filename,
                                                separation=separation,
                                                padding=padding,
                                                resolution=resolution,
+                                               silk_scaling=silk_scaling,
                                                use_color=color,
                                                fmt=fmt)
 

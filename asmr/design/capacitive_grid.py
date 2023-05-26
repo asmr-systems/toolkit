@@ -25,6 +25,7 @@ class CapacitiveGrid:
                  use_color=False,      # display different color electrodes
                  n_columns_per_pad=1 , # each column pad is 2 columns
                  n_rows_per_pad=1,     # each row pad is 2 rows
+                 silk_scaling=(1, 1),
                  fmt='1.0|1.0'):       # format string
         isExtensionless = len(filename.split('.')) < 2 # TODO check valid extensions
         self.ext = 'svg' if isExtensionless else filename.split('.')[-1]
@@ -39,6 +40,8 @@ class CapacitiveGrid:
         self.use_color = use_color
         self.n_columns_per_pad = n_columns_per_pad
         self.n_rows_per_pad = n_rows_per_pad
+        self.silk_grid_scale_x = silk_scaling[0]
+        self.silk_grid_scale_y = silk_scaling[1]
         self.fmt_str = fmt
         self.fmt = (
             {'fill': 6.0, 'pattern': '#'},
@@ -90,6 +93,7 @@ class CapacitiveGrid:
         footprint.save()
 
 
+# TODO: incorporate grid x and y scale
 def create_inverted_square_grid(grid: CapacitiveGrid, layer='solder_mask'):
     size = grid.pitch - grid.xwidth
 
@@ -166,11 +170,13 @@ def create_inverted_square_grid(grid: CapacitiveGrid, layer='solder_mask'):
             ))
 
 def create_square_grid(grid: CapacitiveGrid, layer='silkscreen'):
+    x_scale = grid.silk_grid_scale_x
+    y_scale = grid.silk_grid_scale_y
     x_offset = grid.ywidth/2
     y_offset = grid.xwidth/2
 
-    for column in range(grid.size[0] + 1):
-        xcenter = column*grid.pitch + x_offset
+    for column in range(int(grid.size[0]/y_scale) + 1):
+        xcenter = column*grid.pitch*y_scale + x_offset
         ylength = grid.pitch * grid.size[1] + grid.ywidth
         grid.layers[layer].append(Line(
             xcenter + grid.margin,
@@ -182,8 +188,8 @@ def create_square_grid(grid: CapacitiveGrid, layer='silkscreen'):
             group=layer,
         ))
 
-    for row in range(grid.size[1] + 1):
-        y_start = row*grid.pitch + y_offset
+    for row in range(int(grid.size[1]/x_scale) + 1):
+        y_start = row*grid.pitch*x_scale + y_offset
         xlength = grid.pitch*grid.size[0] + grid.xwidth
         grid.layers[layer].append(Line(
             0,
@@ -392,6 +398,7 @@ class CapacitiveGridGenerator:
                  separation=0.5,
                  padding=0,
                  resolution=(1, 1),
+                 silk_scaling=(1, 1),
                  use_color=False,
                  fmt='1.0|1.0'):
         self.size = (1, 1) if size is None else size
@@ -401,6 +408,7 @@ class CapacitiveGridGenerator:
         self.separation = 0.5 if separation is None else separation
         self.padding = 0 if padding is None else padding
         self.resolution = (1, 1) if resolution is None else resolution
+        self.silk_scaling = (1, 1) if silk_scaling is None else silk_scaling
         self.use_color = False if use_color is None else use_color
         self.fmt = '1.0|1.0' if fmt is None else fmt
 
@@ -414,6 +422,7 @@ class CapacitiveGridGenerator:
                               padding = self.padding,
                               n_columns_per_pad=self.resolution[0],
                               n_rows_per_pad=self.resolution[1],
+                              silk_scaling=self.silk_scaling,
                               use_color = self.use_color,
                               fmt=self.fmt)
         if pattern is GridPattern.Interleaved:
