@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 
 import svgwrite
@@ -26,6 +27,7 @@ class CapacitiveGrid:
                  n_columns_per_pad=1 , # each column pad is 2 columns
                  n_rows_per_pad=1,     # each row pad is 2 rows
                  silk_scaling=(1, 1),
+                 mask_electrodes=(False, True), # cover electrodes in solder mask
                  fmt='1.0|1.0'):       # format string
         isExtensionless = len(filename.split('.')) < 2 # TODO check valid extensions
         self.ext = 'svg' if isExtensionless else filename.split('.')[-1]
@@ -42,6 +44,8 @@ class CapacitiveGrid:
         self.n_rows_per_pad = n_rows_per_pad
         self.silk_grid_scale_x = silk_scaling[0]
         self.silk_grid_scale_y = silk_scaling[1]
+        self.mask_electrode_x = mask_electrodes[0]
+        self.mask_electrode_y = mask_electrodes[1]
         self.fmt_str = fmt
         self.fmt = (
             {'fill': 6.0, 'pattern': '#'},
@@ -389,6 +393,30 @@ def create_diamond_grid(grid: CapacitiveGrid, layer='electrodes'):
                 cutoff = cutoff,
             ))
 
+def generate_solder_mask(grid: CapacitiveGrid):
+    if not grid.mask_electrode_x and not grid.mask_electrode_y:
+        create_inverted_square_grid(grid)
+        return
+
+    if grid.mask_electrode_y and not grid.mask_electrode_x:
+        for electrode in grid.layers['electrodes']:
+            n = int(electrode.group.split('=')[1])
+            if n > grid.size[0]:
+                e = copy.deepcopy(electrode)
+                e.group = 'solder_mask'
+                e.color= grid.colors['solder_mask']
+                grid.layers['solder_mask'].append(e)
+    if grid.mask_electrode_x and not grid.mask_electrode_y:
+        for electrode in grid.layers['electrodes']:
+            n = int(electrode.group.split('=')[1])
+            if n <= grid.size[0]:
+                e = copy.deepcopy(electrode)
+                e.group = 'solder_mask'
+                e.color= grid.colors['solder_mask']
+                grid.layers['solder_mask'].append(e)
+
+
+
 class CapacitiveGridGenerator:
     def __init__(self,
                  size=(1, 1),
@@ -428,9 +456,10 @@ class CapacitiveGridGenerator:
         if pattern is GridPattern.Interleaved:
             create_interleaved_grid(grid)
             create_square_grid(grid)
-            create_inverted_square_grid(grid)
+            generate_solder_mask(grid)
         elif pattern is GridPattern.Diamond:
             create_diamond_grid(grid)
             create_square_grid(grid)
-            create_inverted_square_grid(grid)
+            generate_solder_mask(grid)
+
         grid.save()
