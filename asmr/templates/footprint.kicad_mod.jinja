@@ -52,4 +52,14 @@
     (tstamp {{ rect.uuid }})
     )
   {%- endfor %}
+  
+  {%- for line in mask.lines %}
+  (fp_line
+    (start {{ line.x0 }} {{ line.y0 }})
+    (end {{ line.x1 }} {{ line.y1 }})
+    (layer "{{ line.layer }}")
+    (width {{ line.width }})
+    (tstamp {{ line.uuid }})
+    )
+  {%- endfor %}
 )

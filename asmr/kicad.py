@@ -158,7 +158,7 @@ class Footprint:
                  silkscreen=[]):
         self.filename = filename
         self.pads = {}
-        self.mask = {'rects': []}
+        self.mask = {'rects': [], 'lines': []}
         self.silkscreen = {'lines': []}
         if len(pads) > 0:
             self.pads_from_shapes(pads)
@@ -187,6 +187,8 @@ class Footprint:
         for shape in shapes:
             if shape.__class__ == asmr.design.gfx.Rectangle:
                 self.mask['rects'].append(Rectangle.from_gfx(shape, layer="F.Mask"))
+            if shape.__class__ == asmr.design.gfx.Line:
+                self.mask['lines'].append(Line.from_gfx(shape, layer="F.Mask"))
 
     def silkscreen_from_shapes(self, shapes):
         for shape in shapes:

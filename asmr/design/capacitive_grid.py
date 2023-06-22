@@ -401,7 +401,7 @@ def generate_solder_mask(grid: CapacitiveGrid):
     if grid.mask_electrode_y and not grid.mask_electrode_x:
         for electrode in grid.layers['electrodes']:
             n = int(electrode.group.split('=')[1])
-            if n > grid.size[0]:
+            if n > grid.size[1]:
                 e = copy.deepcopy(electrode)
                 e.group = 'solder_mask'
                 e.color= grid.colors['solder_mask']
@@ -409,7 +409,7 @@ def generate_solder_mask(grid: CapacitiveGrid):
     if grid.mask_electrode_x and not grid.mask_electrode_y:
         for electrode in grid.layers['electrodes']:
             n = int(electrode.group.split('=')[1])
-            if n <= grid.size[0]:
+            if n <= grid.size[1]:
                 e = copy.deepcopy(electrode)
                 e.group = 'solder_mask'
                 e.color= grid.colors['solder_mask']
