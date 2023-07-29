@@ -4,6 +4,7 @@ import click
 
 import asmr.logging
 import asmr.design
+import asmr.kicad
 
 
 #:::: Logging
@@ -64,3 +65,11 @@ def touch_grid(filename,
                                                fmt=fmt)
 
     grid.create(pattern, filename)
+
+@main.command("kicad-symbol")
+@click.option('-p', '--pins', default=1, help="number of pins", type=int)
+@click.option('-f', '--filename', required=True, help="output file (.svg|.kicad_mod)")
+def kicad_symbol(pins, filename):
+    """ generate a kicad symbol. """
+    sym = asmr.kicad.Symbol(filename, pins)
+    sym.save()

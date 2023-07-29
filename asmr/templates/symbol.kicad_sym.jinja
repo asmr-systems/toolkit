@@ -1,0 +1,33 @@
+(kicad_symbol_lib
+  (version 20211014)
+  (generator {{ generating_program }})                                         
+
+  (symbol "{{ name }}" (in_bom yes) (on_board yes)
+    (property "Reference" "U" (id 0) (at 0 5.08 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "{{ name }}" (id 1) (at 0 2.54 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (id 2) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (id 3) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (symbol "{{ name }}_1_1"
+      {%- for pin in pins %}
+      (pin input line (at {{ pin }} 0 90) (length 2.54)
+        (name "X{{ loop.index }}" (effects (font (size 1.27 1.27))))
+        (number "{{ loop.index }}" (effects (font (size 1.27 1.27))))
+      )
+      {%- endfor %}
+    )
+    (symbol "{{ name }}_0_1"
+      (rectangle (start 0 0) (end {{ width }} {{ height }})
+        (stroke (width 0.1524) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+    )
+  )
+)
