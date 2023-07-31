@@ -222,7 +222,7 @@ class Symbol:
                  symetric_pins=True):
         self.filename = filename
         pitch = 2.54
-        margin = 10
+        margin = 2.54*5
         max_pins_per_side = n_pins
         if symetric_pins:
             max_pins_per_side = math.ceil(n_pins/4)
