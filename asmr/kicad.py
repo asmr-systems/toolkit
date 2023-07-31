@@ -1,6 +1,7 @@
 """ AMSR KiCAD Tools"""
 
 import os
+import math
 import uuid
 from pathlib import Path
 
@@ -217,12 +218,35 @@ class Symbol:
                  filename,
                  n_pins,
                  width=-1,
-                 height=-1):
+                 height=-1,
+                 symetric_pins=True):
         self.filename = filename
-        margin = 2.54
-        self.pins = [x*margin+margin for x in range(n_pins)]
-        self.width = self.pins[-1] + margin
-        self.height = -5
+        pitch = 2.54
+        margin = 10
+        max_pins_per_side = n_pins
+        if symetric_pins:
+            max_pins_per_side = math.ceil(n_pins/4)
+            min_pins_per_side = math.floor(n_pins/4)
+            xlim = (0, max_pins_per_side*pitch + 2*margin)
+            ylim = (0, -(max_pins_per_side*pitch + 2*margin))
+            self.pins = []
+            for i in range(n_pins):
+                p = (0, 0, 0)
+                if i < min_pins_per_side:
+                    p = (i*pitch+margin, ylim[0], 270)
+                elif i < min_pins_per_side*2:
+                    p = (xlim[1], -((i%min_pins_per_side)*pitch+margin), 180)
+                elif i < min_pins_per_side*3:
+                    p = ((min_pins_per_side - (i%min_pins_per_side))*pitch+margin, ylim[1], 90)
+                else:
+                    p = (xlim[0], -((max_pins_per_side - (i%max_pins_per_side))*pitch+margin), 0)
+                self.pins.append(p)
+            self.width = max_pins_per_side*pitch + 2*margin
+            self.height = -(max_pins_per_side*pitch + 2*margin)
+        else:
+            self.pins = [(x*pitch+margin, 0, 270) for x in range(n_pins)]
+            self.width = max_pins_per_side*pitch + 2*margin
+            self.height = -margin
 
     def save(self):
         name = '.'.join(self.filename.split('.')[:-1])

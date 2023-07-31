@@ -17,7 +17,7 @@
     )
     (symbol "{{ name }}_1_1"
       {%- for pin in pins %}
-      (pin input line (at {{ pin }} 0 90) (length 2.54)
+      (pin input line (at {{ pin[0] }} {{ pin[1] }} {{ pin[2] }}) (length 2.54)
         (name "X{{ loop.index }}" (effects (font (size 1.27 1.27))))
         (number "{{ loop.index }}" (effects (font (size 1.27 1.27))))
       )
