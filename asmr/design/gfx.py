@@ -52,6 +52,11 @@ class Rectangle:
         self.ry = ry
         self.group = group
 
+class Curve:
+    def __init__(self):
+        # TODO (coco|2023.10.14) IMPLEMENT ME. should be cubic Bezier Curve.
+        pass
+
 class Diamond:
     def __init__(self,
                  x0,
@@ -194,6 +199,14 @@ class SVG:
         self.dwg.add(self.scale_group)
         if len(shapes) > 0:
             self.from_shapes(shapes)
+
+    def import_from_file(self):
+        # TODO (coco|2023.10.14) import from file
+        pass
+
+    def to_shapes(self):
+        # TODO (coco|2023.10.14) take an existing SVG and convert to a list of our internal representation of shapes
+        pass
 
     def from_shapes(self, shapes):
         for shape in shapes:
