@@ -29,6 +29,13 @@ class Line:
         self.linecap = linecap
         self.group = group
 
+    def get_width(self):
+        return abs(self.x1 - self.x0)
+
+    def get_height(self):
+        return abs(self.y1 - self.y0)
+
+
 class Rectangle:
     def __init__(self,
                  x0,
@@ -52,10 +59,23 @@ class Rectangle:
         self.ry = ry
         self.group = group
 
+    def get_width(self):
+        return abs(self.x1 - self.x0)
+
+    def get_height(self):
+        return abs(self.y1 - self.y0)
+
+
 class Curve:
     def __init__(self):
         # TODO (coco|2023.10.14) IMPLEMENT ME. should be cubic Bezier Curve.
         pass
+    def get_width(self):
+        pass
+
+    def get_height(self):
+        pass
+
 
 class Diamond:
     def __init__(self,
@@ -91,6 +111,12 @@ class Diamond:
 
         self.apply_cutoff()
         self.generate_fill_lines()
+
+    def get_width(self):
+        return abs(self.x1 - self.x3)
+
+    def get_height(self):
+        return abs(self.y1 - self.y0)
 
     def apply_cutoff(self):
         if self.cutoff == 'none':
@@ -193,12 +219,27 @@ class SVG:
     def __init__(self, filename, shapes=[]):
         self.filename = filename
         self.groups = {}
-        self.scale = 3.543307
-        self.dwg = svgwrite.drawing.Drawing(self.filename, profile='full')
+        width, height = self.get_size_from(shapes)
+        self.dwg = svgwrite.drawing.Drawing(
+            self.filename,
+            profile='full',
+            size=(f'{width}mm', f'{height}mm'),
+            viewBox=f'0 0 {width} {height}',
+        )
+
+        # TODO maybe remove this.
+        self.scale = 1#3.543307 # not sure if this is necessary.
         self.scale_group = self.dwg.g(transform=f'scale({self.scale})')
         self.dwg.add(self.scale_group)
+
         if len(shapes) > 0:
             self.from_shapes(shapes)
+
+    def get_size_from(self, shapes):
+        return (
+            max([s.get_width() for s in shapes]),
+            max([s.get_height() for s in shapes]),
+        )
 
     def import_from_file(self):
         # TODO (coco|2023.10.14) import from file
@@ -232,9 +273,10 @@ class SVG:
                     ((shape.x1-shape.x0), (shape.y1-shape.y0)),
                     rx=shape.rx,
                     ry=shape.ry,
-                    fill=c[0],
+                    fill='none' if not shape.fill else c[0],
                     opacity=c[1],
-                    stroke_width=0,
+                    stroke=c[0],
+                    stroke_width=0 if shape.fill else shape.width,
                 ))
             if shape.__class__ is Diamond:
                 group.add(self.dwg.polygon(
@@ -257,4 +299,4 @@ class SVG:
         return (hexc[:-2], f'{(int(hexc[-2:], 16)/255):.2f}')
 
     def save(self):
-        self.dwg.save()
+        self.dwg.save(pretty=True)

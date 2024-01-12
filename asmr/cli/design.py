@@ -73,3 +73,15 @@ def kicad_symbol(pins, filename):
     """ generate a kicad symbol. """
     sym = asmr.kicad.Symbol(filename, pins)
     sym.save()
+
+@main.command("eurorack-panel")
+@click.option('-p', '--hp', default=8, help="module HP", type=int)
+@click.option('-u', '--hu', default=3, help="module HU", type=int)
+@click.option('-o', '--ovals', default=True, help="oval mounting holes", type=bool)
+@click.option('--show-pcb-zone', is_flag=True, default=False, help="show allowable pcb zone")
+@click.option('-f', '--filename', required=True, help="output file (.svg)")
+def eurorack_panel(hp, hu, ovals, show_pcb_zone, filename):
+    """ generate a eurorack panel svg. """
+    panel = asmr.design.EurorackPanel(filename, hp, hu, ovals=ovals, pcb_zone=show_pcb_zone)
+    panel.render()
+    panel.save()
